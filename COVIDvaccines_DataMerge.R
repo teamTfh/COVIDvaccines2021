@@ -19,8 +19,8 @@ sessionInfo()
 #' ------------------ Demographics and SubjectVisit --------------------------
 #'
 
-demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-02-05_1542.csv", colClasses = 'character')
-demog <- demog[-which(demog$Alias == "HV-0xx"),]
+demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-02-18_1048.csv", colClasses = 'character')
+# demog <- demog[-which(demog$Alias == "HV-0xx"),]
 demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%Y-%m-%d")} )              # convert date fields to true dates
 demog$Age <- as.numeric(demog$Age)
 demog$Race <- substr(demog$Race, 4, 30)
@@ -74,6 +74,18 @@ demog.melt[which( grep(pattern="6$", x = demog.melt$Label, value=F) & demog.melt
 demog.melt[which(demog.melt$Label== "PHI-053_V3"),"shortForm"] <- '4W'
 demog.melt[which(demog.melt$Label== "PHI-053_V3"),"timeCategory"] <- 'Post 2nd dose'
 
+# -------- One month post 2nd dose -------------- 
+demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
+demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post 2nd dose"
+
+demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
+demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post 2nd dose"
+
+demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post 2nd dose"
+
+demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post 2nd dose"
 
 #demog.melt[which(demog.melt$DPV <2),]$shortForm <- "bL"; demog.melt[which(demog.melt$DPV <2),]$timeCategory <- "Baseline" 
 #demog.melt[which(demog.melt$DPV %in% 2:12),]$shortForm <- "oW"; demog.melt[which(demog.melt$DPV %in% 2:12),]$timeCategory <- "oneWeek" 
@@ -108,45 +120,46 @@ ASCelispot <- read.csv("../Data/ASCelispot.csv")
 flowData.freq <- read.csv(file="../Data/ByParent.csv")                                 # flow cytometry ByParent spreadsheet
 flowData.freq <- flowData.freq[-grep(paste(c("Mean","SD"),collapse = "|"), flowData.freq$X, value=F), ]         # delete the Mean and SD rows
 names(flowData.freq)[1] <- "fcsFile"                # simple name
-flowData.freq <- flowData.freq[-which(flowData.freq$fcsFile == "CV-022_PHI-021_bL_HEP.fcs"),]           # exclude CV-022_PHI-021_bL due to failed QC
+flowData.freq <- flowData.freq[-which(flowData.freq$fcsFile == "CV-022_PHI-021_bL_HEP_Live.fcs"),]           # exclude CV-022_PHI-021_bL due to failed QC
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390-bL_HEP.fcs")] <- "CV-033_PHI-390_bL_HEP.fcs"      # correct transcribing error
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-002_HV081_HEP.fcs")] <- "CV-002_HV-081_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-003_HV-076_HEP.fcs")] <- "CV-003_HV-076_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-019_HV-068_HEP.fcs")] <- "CV-019_HV-068_bL_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-017_HV-003_HEP.fcs")] <- "CV-017_HV-003_bL_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-018_PHI-074_HEP.fcs")] <- "CV-018_PHI-074_bL_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-005_PHI-071_2W_HEP.fcs")] <- "CV-005_PHI-071_oW_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390-bL_HEP.fcs")] <- "CV-033_PHI-390_bL_HEP.fcs"   # correct transcribing error
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-002_HV081_oW_HEP_Live.fcs")] <- "CV-002_HV-081_oW_HEP_Live.fcs"   
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-003_HV-076_HEP.fcs")] <- "CV-003_HV-076_oW_HEP.fcs"  ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-019_HV-068_HEP.fcs")] <- "CV-019_HV-068_bL_HEP.fcs"  ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-017_HV-003_HEP.fcs")] <- "CV-017_HV-003_bL_HEP.fcs"  ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-018_PHI-074_HEP.fcs")] <- "CV-018_PHI-074_bL_HEP.fcs"  ---fixed in flow jo 
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-005_PHI-071_2W_HEP_Live.fcs")] <- "CV-005_PHI-071_oW_HEP_Live.fcs"  
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-006_HV-018_2W_HEP.fcs")] <- "CV-006_HV-018_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_HV-003_3W_HEP.fcs")] <- "CV-017_HV-003_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-027_PHI-313_2W_HEP.fcs")] <- "CV-027_PHI-313_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-025_PHI-315_2W_HEP.fcs")] <- "CV-025_PHI-315_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_bL_HEP.fcs")] <- "CV-020_PHI-050_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_2W_HEP.fcs")] <- "CV-020_PHI-050_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-026_PHI-052_2W_HEP.fcs")] <- "CV-026_PHI-052_oW_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-024_HV-085_4W_HEP.fcs")] <- "CV-024_HV-085_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390_4W_HEP.fcs")] <- "CV-033_PHI-390_3W_HEP.fcs"	
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-006_HV-018_2W_HEP_Live.fcs")] <- "CV-006_HV-018_3W_HEP_Live.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_HV-003_3W_HEP_Live.fcs")] <- "CV-017_HV-003_3W_HEP_Live.fcs" ---fixed in flow jo
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-027_PHI-313_2W_HEP_Live.fcs")] <- "CV-027_PHI-313_oW_HEP_Live.fcs"
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-025_PHI-315_2W_HEP_Live.fcs")] <- "CV-025_PHI-315_oW_HEP_Live.fcs"
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_bL_HEP_Live.fcs")] <- "CV-020_PHI-050_oW_HEP_Live.fcs"
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_2W_HEP_Live.fcs")] <- "CV-020_PHI-050_3W_HEP_Live.fcs"
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-026_PHI-052_2W_HEP_Live.fcs")] <- "CV-026_PHI-052_oW_HEP_Live.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-024_HV-085_4W_HEP_Live.fcs")] <- "CV-024_HV-085_3W_HEP_Live.fcs" ---fixd in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390_4W_HEP_Live.fcs")] <- "CV-033_PHI-390_3W_HEP_Live.fcs"	---fixed in flow jo
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_4W_HEP.fcs")] <- "CV-015_PHI-048_3W_HEP.fcs"	
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_PHI-072-4W_CPT.fcs")] <- "CV-010_PHI-072_4W_HEP.fcs"	
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_4W_HEP_Live.fcs")] <- "CV-015_PHI-048_3W_HEP_Live.fcs"	
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_5W_HEP_Live.fcs")] <- "CV-015_PHI-048_4W_HEP_Live.fcs"	
+flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_PHI-072-4W_HEP_Live.fcs")] <- "CV-010_PHI-072_4W_HEP_Live.fcs"	
 
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-031_PHI-046_3W_HEP_Unmixed.fcs")] <- "CV-031_PHI-046_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-021_HV-054_3W_HEP_Unmixed.fcs")] <- "CV-021_HV-054_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-028_PHI-398_4W_HEP_Unmixed.fcs")] <- "CV-028_PHI-398_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-032_HV-052_3W_HEP_Unmixed.fcs")] <- "CV-032_HV-052_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210127-CV-007_HV-002_4W_HEP_Unmixed.fcs")] <- "CV-007_HV-002_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210127-CV-008_HV-008_4W_HEP_Unmixed.fcs")] <- "CV-008_HV-008_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-024_HV-085_4W_HEP_Unmixed.fcs")] <- "CV-024_HV-085_4W_HEP.fcs"  
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-029_HV-078_3W_HEP_Unmixed.fcs")] <- "CV-029_HV-078_3W_HEP.fcs"  
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-030_HV-079_3W_HEP_Unmixed.fcs")] <- "CV-030_HV-079_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-005_PHI-071_3W_HEP_Unmixed.fcs")] <- "CV-005_PHI-071_3W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-011_HV-084_5W_HEP_Unmixed.fcs")] <- "CV-011_HV-084_5W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-015_PHI-048_5W_HEP_Unmixed.fcs")] <- "CV-015_PHI-048_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-016_PHI-073_4W_HEP_Unmixed.fcs")] <- "CV-016_PHI-073_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-023_PHI-020_4W_HEP_Unmixed.fcs")] <- "CV-023_PHI-020_4W_HEP.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-034_PHI-058_3W_HEP_Unmixed.fcs")] <- "CV-034_PHI-058_3W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-031_PHI-046_3W_HEP_Unmixed.fcs")] <- "CV-031_PHI-046_3W_HEP.fcs" --- fixed in flow jo
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-021_HV-054_3W_HEP_Unmixed.fcs")] <- "CV-021_HV-054_3W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-028_PHI-398_4W_HEP_Unmixed.fcs")] <- "CV-028_PHI-398_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-032_HV-052_3W_HEP_Unmixed.fcs")] <- "CV-032_HV-052_3W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210127-CV-007_HV-002_4W_HEP_Unmixed.fcs")] <- "CV-007_HV-002_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210127-CV-008_HV-008_4W_HEP_Unmixed.fcs")] <- "CV-008_HV-008_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-024_HV-085_4W_HEP_Unmixed.fcs")] <- "CV-024_HV-085_4W_HEP.fcs"  
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-029_HV-078_3W_HEP_Unmixed.fcs")] <- "CV-029_HV-078_3W_HEP.fcs"  
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210128-CV-030_HV-079_3W_HEP_Unmixed.fcs")] <- "CV-030_HV-079_3W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-005_PHI-071_3W_HEP_Unmixed.fcs")] <- "CV-005_PHI-071_3W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-011_HV-084_5W_HEP_Unmixed.fcs")] <- "CV-011_HV-084_5W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-015_PHI-048_5W_HEP_Unmixed.fcs")] <- "CV-015_PHI-048_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-016_PHI-073_4W_HEP_Unmixed.fcs")] <- "CV-016_PHI-073_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-023_PHI-020_4W_HEP_Unmixed.fcs")] <- "CV-023_PHI-020_4W_HEP.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210129-CV-034_PHI-058_3W_HEP_Unmixed.fcs")] <- "CV-034_PHI-058_3W_HEP.fcs"
 
 flowDataPHIbL.freq <- read.csv(file="../Data/ByParent_PHI Baselines.csv")                                 # flow cytometry ByParent_PHI Baselines spreadsheet
 flowDataPHIbL.freq <- flowDataPHIbL.freq[-grep(paste(c("Mean","SD"),collapse = "|"), flowDataPHIbL.freq$X, value=F), ]         # delete the Mean and SD rows
@@ -161,7 +174,7 @@ flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201106_Flu and
 flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201203_PHI and HV_JA-20201203_PHI-050 V3_Unmixed.fcs")] <- "CV-020_PHI-050_bL_CPT.fcs"
 flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201210_PHI Sample_JA-20201207_PHI-315 V3_Unmixed.fcs")] <- "CV-025_PHI-315_bL_CPT.fcs"
 
-flowDataPHIbL.freq <- flowDataPHIbL.freq[-which(flowDataPHIbL.freq$fcsFile == "CV-015_PHI-048_bL_CPT.fcs"),]           # exclude CV-022_PHI-021_bL due to failed QC
+flowDataPHIbL.freq <- flowDataPHIbL.freq[-which(flowDataPHIbL.freq$fcsFile == "CV-015_PHI-048_bL_CPT.fcs"),]           # exclude CV-014_PHI-048_bL -- will use oD as baseline
 
 
 flowData.freq <- rbind(flowData.freq, flowDataPHIbL.freq) #merging ByParent and ByParent_PHIbaselines 
@@ -174,10 +187,10 @@ names(a) <- c("Record.ID","Alias","categoricalVisit","Tube")
 a$Tube <- substr(a$Tube,1,3)                                  # get rid of .fcs and have tube type stand alone
 flowData.freq <- as.data.frame(cbind(a,flowData.freq))
 names(flowData.freq) <- str_replace(names(flowData.freq),pattern="...Freq..of.Parent....", "_FreqParent")
-names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Lymphocytes.Single.Cells.Single.Cells.Live.CD3.CD4", "CD4_")
-names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Lymphocytes.Single.Cells.Single.Cells.Live.CD3.CD8", "CD8_")
-names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Lymphocytes.Single.Cells.Single.Cells.Live.CD19", "CD19_")
-names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Lymphocytes.Single.Cells.Single.Cells.Live.CD3", "CD3_")
+names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Live.CD16..CD14..CD3.CD4", "CD4_")
+names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Live.CD16..CD14..CD3.CD8.", "CD8_")
+names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Live.CD16..CD14..CD19.", "CD19_")
+names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Live.CD16..CD14..CD3", "CD3_")
 flowData.freq[grep(pattern="HV-18", x = flowData.freq$Alias, value=F),"Alias"] <- "HV-018"                 # correcting an error in fcs file name format
 
 
@@ -187,11 +200,14 @@ flowData.freq$categoricalVisit[which(flowData.freq$categoricalVisit == "oD")] <-
 #'
 
 benchling <- read.csv("../Data/SubjectsTable-Benchling.csv")
-names(benchling) <- c("Record.ID","Alias","drawdate","timeCategory","shortForm","day","panelVersion")
-benchling <- benchling[ , -c(9:17)]                             # eliminate columns about inventory
-benchling[grep(pattern = "PHI-72", x=benchling$Alias, value=F),"Alias"] <- "PHI-072"
-benchling[grep(pattern = "PHI-315 ", x=benchling$Alias, value=F),"Alias"] <- "PHI-315"
-
+benchling$TimeCategory <- factor(benchling$TimeCategory, levels = c("Baseline","oneDay","oneWeek","twoWeek","3Week","4Week","5Week","oneMonth"))
+benchling$Aliq.of.5m <- as.numeric(substr(benchling$Aliq.of.5m, start=1,stop=2)) + benchling$Aliq.of.10m
+# names(benchling) <- c("Record.ID","Alias","drawdate","timeCategory","shortForm","day","panelVersion")
+# benchling <- benchling[ , -c(9:17)]                             # eliminate columns about inventory
+# benchling[grep(pattern = "PHI-72", x=benchling$Alias, value=F),"Alias"] <- "PHI-072"
+# benchling[grep(pattern = "PHI-315 ", x=benchling$Alias, value=F),"Alias"] <- "PHI-315"
+ggplot(data = benchling, aes(x=TimeCategory, y=Aliq.of.5m)) + geom_point() + theme_bw() + 
+  theme(axis.text.x = element_text(angle=45, hjust=1,vjust=1) ) +   facet_wrap(~Alias)
 
 
 #' ------------------ merge Data  --------------------------
@@ -212,7 +228,7 @@ mergedData <- merge.3
 flowData.freq[-which(flowData.freq$fcsFile %in% mergedData$fcsFile), 1:5]         # what flow data did not match with final data file? 
 # mergedData[-which(mergedData$fcsFile %in% flowData.freq$fcsFile), 1:10]         # what flow data did not match with final data file? 
 
-mergedData$shortForm <- factor(mergedData$shortForm, levels = c("bL","oW","2W","3W","4W","5W"))
+mergedData$shortForm <- factor(mergedData$shortForm, levels = c("bL","oW","2W","3W","4W","5W", "oM")) #aded oneMonth timepoint
 mergedData$timeCategory <- factor(mergedData$timeCategory, levels = c("Baseline","Post 1st dose","two Weeks", "Pre 2nd dose","Post 2nd dose","2 wks post 2nd dose", "One month post 2nd dose"))
 
 
@@ -221,7 +237,7 @@ FC_response <- dcast(subsetData, `Record.ID`+`Alias` ~`timeCategory`, value.var 
 FC_response$FCtfh_Vax1 <- FC_response$`Post 1st dose`/FC_response$Baseline
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD19_..Nonnaive.B.CD27..CD38._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD19_.Nonnaive.B.CD27..CD38._FreqParent")) 
 FC_response2$FCPB_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, by = c("Record.ID","Alias"))
 
@@ -234,7 +250,7 @@ subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory 
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.CD38.Ki67._FreqParent")) 
 FC_response2$FCActivCD4_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD8_..CD38.Ki67._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD8_.CD38.Ki67._FreqParent")) 
 FC_response2$FCActivCD8_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 
@@ -252,8 +268,6 @@ subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory 
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("Elispot_IgG_S1")) 
 FC_response2$FC_Elispot_IgG_S1 <- FC_response2$`Post 2nd dose`/FC_response2$`Post 1st dose`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
-
-
 
 
 

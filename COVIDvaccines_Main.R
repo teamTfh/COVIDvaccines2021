@@ -16,7 +16,9 @@ sessionInfo()
 
 mergedData <- readRDS(file = "mergedData.Rds")
 # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
-mergedData <- mergedData[-which(mergedData$Alias == "PHI-046"),]                    # only Moderna recipient, will temporarily exclude
+if("PHI-046" %in% mergedData$Alias)  {mergedData <- mergedData[-which(mergedData$Alias == "PHI-046"),] }          # only Moderna recipient, will temporarily exclude
+if("HV-088" %in% mergedData$Alias)  {mergedData <- mergedData[-which(mergedData$Alias == "HV-088"),] }            # did not show for visit, will temporarily exclude
+
 #' ------------------ Cohort description --------------------------
 #'
 
@@ -208,18 +210,23 @@ prePostTime(subsetData, xData = "DPV", yData="CD4_.CD38.Ki67._FreqParent", fillP
             xLabel = "Prior COVID?", yLabel = "Ki67+CD38+ (% CD4)", repMeasures = F, exponential=F) +  coord_cartesian(xlim = c(-5,40))
 
 prePostTime(subsetData, xData = "timeCategory", yData="CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "Activated CD4", 
-            xLabel = "Prior COVID?", yLabel = "Ki67+CD38+ (% CD4)", repMeasures = F, exponential=F) #+ #+ scale_y_continuous(limits = c(0,5))
+            xLabel = "Prior COVID?", yLabel = "Ki67+CD38+ (% CD4)", repMeasures = F, exponential=F)  #+ scale_y_continuous(limits = c(0,5))
 #  ggformula::geom_spline(aes_string(x="timeCategory", y="CD4_.CD38.Ki67._FreqParent"), color="blue",size=1, spar=0.5) #+ 
 ggrepel::geom_text_repel(aes(label=Alias),size=3)
 # ggsave(filename = "./Images/ActivCD4_bothCohorts_overTime.pdf")
 
+fit <- aov(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit)
+fit <- aov(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit)
+
+
 prePostTime(subsetData, xData = "timeCategory", yData="CD8_..CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "Activated CD8", 
-            xLabel = "Prior COVID?", yLabel = "Ki67+CD38+ (% CD8)", repMeasures = F, exponential=F) + scale_y_continuous(breaks=seq(0,10,1)) #+ # limits = c(0,6))
+            xLabel = "Prior COVID?", yLabel = "Ki67+CD38+ (% CD8)", repMeasures = F, exponential=F) + scale_y_continuous(breaks=seq(0,10,1), limits = c(0,7))
 #  ggformula::geom_spline(aes_string(x="timeCategory", y="CD4_.CD38.Ki67._FreqParent"), color="blue",size=1, spar=0.5) #+ 
 ggrepel::geom_text_repel(aes(label=Alias),size=3)
 # ggsave(filename = "./Images/ActivCD8_bothCohorts_overTime.pdf")
 
-
+fit <- aov(CD8_..CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
+fit <- aov(CD8_..CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
 
 subsetData <- subset(mergedData, Record.ID != "CV-011" & Record.ID != "CV-012" )        # extreme outliers because of absence of Ki67 stain
 subsetData <- subset(subsetData, timeCategory == "Baseline")
@@ -282,16 +289,19 @@ prePostTime(data=subsetData, xData = "shortForm", yData="CD8_..CD38.Ki67._FreqPa
 
 #' ------------------ Tfh analyses --------------------------
 #' 
-subsetData <- mergedData[which(mergedData$shortForm == "bL" | mergedData$shortForm == "oW"),]
-prePostTime(data = subsetData, xData = "shortForm", yData="CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
-            title = "cTfh", xLabel = "Prior COVID?", yLabel = "ICOS+CD38+ (% cTfh)") 
+# subsetData <- mergedData[which(mergedData$shortForm == "bL" | mergedData$shortForm == "oW"),]
+# prePostTime(data = subsetData, xData = "shortForm", yData="CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
+            # title = "cTfh", xLabel = "Prior COVID?", yLabel = "ICOS+CD38+ (% cTfh)") 
   
 subsetData <- mergedData[- which(is.na(mergedData$timeCategory) ),]
 subsetData <- subset(subsetData,  timeCategory != "two Weeks");  subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose"))
 prePostTime(subsetData, xData = "timeCategory", yData="CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "cTfh", 
             xLabel = "Prior COVID?", yLabel = "ICOS+CD38+ (% cTfh)", repMeasures = F) #  + ggrepel::geom_text_repel(aes(label=Record.ID),size=2)
 # ggsave(filename = "./Images/cTfh_responses_bothCohorts_overTime.pdf")
-  
+
+fit <- aov(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
+fit <- aov(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
+
   
 twoSampleBar(data = subset(mergedData, timeCategory == "Post 1st dose"), xData = "Prior.COVID.infection.", yData = "FCtfh_Vax1", fillParam = "Prior.COVID.infection.", title = "ICOS+CD38+ cTfh", 
              yLabel = "Fold-change at one week")
@@ -334,23 +344,23 @@ twoSampleBar(data=subsetData, xData = "Prior.COVID.infection.", yData="CD4_.Nonn
 #' ------------------ B cell analyses --------------------------
 #'
 
-
-prePostTime(data=mergedData, xData = "day", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "Plasmablast", 
-            xLabel = "Prior COVID?", yLabel = "PB (% CD19)") + 
+subsetData <- mergedData[- which(is.na(mergedData$timeCategory) ),]
+prePostTime(data=subsetData, xData = "timeCategory", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Alias", 
+            title = "Plasmablast", xLabel = "Prior COVID?", yLabel = "PB (% CD19)")   # + 
   ggformula::geom_spline(aes_string(x="day", y="CD19_..Nonnaive.B.CD27..CD38._FreqParent"), color="blue",size=1, spar=0.5) # + ggrepel::geom_text_repel(aes(label=Record.ID),size=2)
 
 
 subsetData = subset(mergedData, mergedData$shortForm == 'bL' | mergedData$shortForm=='oW'); subsetData = subset(subsetData, subsetData$Prior.COVID.infection.=="No")
 prePostTime(data=subsetData, xData = "shortForm", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "PB - Vax1", 
             xLabel = " ", yLabel = "CD27+CD38+ (% nonnavB)") + scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,2))  + 
-  scale_x_discrete(labels= c("Baseline","One Week"))# + ggrepel::geom_text_repel(aes(label = Record.ID))
+  scale_x_discrete(labels= c("Baseline","One\nWeek"))# + ggrepel::geom_text_repel(aes(label = Record.ID))
 # ggsave(filename = "./Images/PB_vax1_healthy_paired.pdf", width=4)
 
 
 subsetData = subset(mergedData, mergedData$shortForm == '3W' | mergedData$shortForm=='4W'); subsetData = subset(subsetData, subsetData$Prior.COVID.infection.=="No")
 prePostTime(data=subsetData, xData = "shortForm", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
             title = "PB - Vax2", xLabel = " ", yLabel = "CD27+CD38+ (% nonnavB)") + scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,2))  + 
-  scale_x_discrete(labels= c("Baseline","One Week"))# + ggrepel::geom_text_repel(aes(label = Record.ID))
+  scale_x_discrete(labels= c("Pre\n2nd dose","Post\n2nd dose"))# + ggrepel::geom_text_repel(aes(label = Record.ID))
 # ggsave(filename = "./Images/PB_vax2_healthy_paired.pdf", width=4)
 
 
@@ -358,13 +368,13 @@ prePostTime(data=subsetData, xData = "shortForm", yData="CD19_..Nonnaive.B.CD27.
 subsetData = subset(mergedData, mergedData$shortForm == 'bL' | mergedData$shortForm=='oW'); subsetData = subset(subsetData, subsetData$Prior.COVID.infection.=="Yes")
 prePostTime(data=subsetData, xData = "shortForm", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
             title = "PB - Vax1", xLabel = " ", yLabel = "CD27+CD38+ (% nonnavB)") +    
-  scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,3))  + scale_x_discrete(labels= c("Baseline","One Week"))+ scale_fill_manual(values=c("#B5B2F1")) 
+  scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,3))  + scale_x_discrete(labels= c("Baseline","One\nWeek"))+ scale_fill_manual(values=c("#B5B2F1")) 
 # ggsave(filename = "./Images/PB_vax1_covid_paired.pdf", width=4)
 
 subsetData = subset(mergedData, mergedData$shortForm == '3W' | mergedData$shortForm=='4W'); subsetData = subset(subsetData, subsetData$Prior.COVID.infection.=="Yes")
 prePostTime(data=subsetData, xData = "shortForm", yData="CD19_..Nonnaive.B.CD27..CD38._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
             title = "PB - Vax2", xLabel = " ", yLabel = "CD27+CD38+ (% nonnavB)") +    
-  scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,3))  + scale_x_discrete(labels= c("Baseline","One Week"))+ scale_fill_manual(values=c("#B5B2F1")) 
+  scale_y_continuous(breaks = seq(0,21,0.5), limits = c(0,3))  + scale_x_discrete(labels= c("Pre\n2nd dose","Post\n2nd dose"))+ scale_fill_manual(values=c("#B5B2F1")) 
 # ggsave(filename = "./Images/PB_vax2_covid_paired.pdf", width=4)
 
 subsetData = subset(mergedData, mergedData$shortForm == 'bL' ); subsetData = subset(subsetData, subsetData$Prior.COVID.infection.=="No")
