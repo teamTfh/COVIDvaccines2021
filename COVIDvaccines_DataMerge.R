@@ -19,16 +19,18 @@ sessionInfo()
 #' ------------------ Demographics and SubjectVisit --------------------------
 #'
 
-demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-02-18_1048.csv", colClasses = 'character')
-# demog <- demog[-which(demog$Alias == "HV-0xx"),]
-demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%Y-%m-%d")} )              # convert date fields to true dates
+demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-02-25_1149.csv", colClasses = 'character')    
+if ( !is.na(strptime(demog[1,10], format = "%m/%d/%Y")) )       # don't knowwhy but format shifts with exports, so will acount for both possibilities here
+  demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%m/%d/%Y")} )      # convert date fields to true dates
+if ( !is.na(strptime(demog[1,10], format = "%Y-%m-%d")) )
+  demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%Y-%m-%d")} )    # convert date fields to true dates
+
 demog$Age <- as.numeric(demog$Age)
 demog$Race <- substr(demog$Race, 4, 30)
 index <- grep("Blood",names(demog),value=F)[1]  # start at column 11 which is the first Blood.draw.date field
 for(i in index:ncol(demog))    { demog[,i] <- as.numeric(difftime(time1 = demog[,i], time2=demog$Vaccine.1.date, units='days')) }
 names(demog)[grep("Blood.draw",names(demog),value=F)] <- paste0("V",seq(1,length(names(demog[grep("Blood.draw",names(demog),value=F)]))))     # convert to V1-Vx format
 demog$DPO.covid <- round(as.numeric(difftime(time1 = demog$Date.of.Onset.of.Symptoms, time2 = demog$Vaccine.1.date, units = 'days')), 0); demog$Date.of.Onset.of.Symptoms <- NULL
-demog <- demog[-which(demog$Record.ID == "CV-013"), ]           # exclude due to active COVID at time of vaccination so uncertain cohort
 
 demog.melt <- melt(demog, id.vars = c("Record.ID", "Alias"), measure.vars = c("V1","V2","V3","V4","V5","V6","V7"))
 demog.melt$Label <- paste0(demog.melt$Alias, "_", demog.melt$variable); 
@@ -76,16 +78,16 @@ demog.melt[which(demog.melt$Label== "PHI-053_V3"),"timeCategory"] <- 'Post 2nd d
 
 # -------- One month post 2nd dose -------------- 
 demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post 2nd dose"
+demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post\n2nd dose"
 
 demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post 2nd dose"
+demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post\n2nd dose"
 
 demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post 2nd dose"
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post\n2nd dose"
 
 demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post 2nd dose"
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post\n2nd dose"
 
 #demog.melt[which(demog.melt$DPV <2),]$shortForm <- "bL"; demog.melt[which(demog.melt$DPV <2),]$timeCategory <- "Baseline" 
 #demog.melt[which(demog.melt$DPV %in% 2:12),]$shortForm <- "oW"; demog.melt[which(demog.melt$DPV %in% 2:12),]$timeCategory <- "oneWeek" 
@@ -111,6 +113,11 @@ neutAb <- read.csv("../Data/neutAb.csv")
 #'
 
 ASCelispot <- read.csv("../Data/ASCelispot.csv")
+
+#' ------------------ CXCL13 --------------------------                  
+#'
+
+CXCL13 <- read.csv("../Data/CXCL13.csv")
 
 
 
@@ -183,8 +190,8 @@ flowData.freq <- rbind(flowData.freq, flowDataPHIbL.freq) #merging ByParent and 
 flowData.freq <- flowData.freq[-grep("CV-013", flowData.freq$fcsFile, value=F), ] # exclude due to active COVID at time of vaccination so uncertain cohort
 
 a <- do.call(rbind.data.frame, strsplit(flowData.freq$fcsFile, "_"))      # split FCS file name by underscore
-names(a) <- c("Record.ID","Alias","categoricalVisit","Tube")
-a$Tube <- substr(a$Tube,1,3)                                  # get rid of .fcs and have tube type stand alone
+names(a) <- c("Record.ID","Alias","categoricalVisit","Tube","overflow")
+a$Tube <- substr(a$Tube,1,3)                                  # get rid of any suffix .fcs and have tube type stand alone
 flowData.freq <- as.data.frame(cbind(a,flowData.freq))
 names(flowData.freq) <- str_replace(names(flowData.freq),pattern="...Freq..of.Parent....", "_FreqParent")
 names(flowData.freq) <- str_replace(names(flowData.freq),pattern="Live.CD16..CD14..CD3.CD4", "CD4_")
@@ -195,6 +202,7 @@ flowData.freq[grep(pattern="HV-18", x = flowData.freq$Alias, value=F),"Alias"] <
 
 
 flowData.freq$categoricalVisit[which(flowData.freq$categoricalVisit == "oD")] <- "bL"
+flowData.freq$overflow <- NULL
 
 #' ------------------ Benchling records --------------------------                  # probably don't need this dataframe once shortForm and timeCategory are calculated
 #'
@@ -217,10 +225,11 @@ merge.1 <-  merge(x=demog, y=demog.melt, all=T, by=c("Record.ID","Alias"))
 merge.serology <- merge(x = totBinding, y=neutAb, all=T, by=c("Label"))
 merge.serology <- merge(x = merge.serology, y=ASCelispot, all=T,  by=c("Label"))
 merge.2 <- merge(x = merge.1, y = merge.serology, all = T, by=c("Label"))
-merge.3 <- merge(x = merge.2, y = flowData.freq, all=T, by.x=c("Alias","shortForm", "Record.ID"), by.y = c("Alias","categoricalVisit","Record.ID"))
+merge.3 <- merge(x = merge.2, y = CXCL13, all=T, by=c("Label"))
+merge.4 <- merge(x = merge.3, y = flowData.freq, all=T, by.x=c("Alias","shortForm", "Record.ID"), by.y = c("Alias","categoricalVisit","Record.ID"))
 
 
-mergedData <- merge.3
+mergedData <- merge.4
 
 # mergedData <- merge(x = benchling, y=flowData.freq, by.x = c("Record.ID","Alias","shortForm"), by.y = c("Record.ID","Alias","categoricalVisit") ) 
 # mergedData <- merge(x=demog, y=mergedData, by=c("Record.ID","Alias"))           # not elegant but it'll do
@@ -228,8 +237,9 @@ mergedData <- merge.3
 flowData.freq[-which(flowData.freq$fcsFile %in% mergedData$fcsFile), 1:5]         # what flow data did not match with final data file? 
 # mergedData[-which(mergedData$fcsFile %in% flowData.freq$fcsFile), 1:10]         # what flow data did not match with final data file? 
 
-mergedData$shortForm <- factor(mergedData$shortForm, levels = c("bL","oW","2W","3W","4W","5W", "oM")) #aded oneMonth timepoint
-mergedData$timeCategory <- factor(mergedData$timeCategory, levels = c("Baseline","Post 1st dose","two Weeks", "Pre 2nd dose","Post 2nd dose","2 wks post 2nd dose", "One month post 2nd dose"))
+mergedData$shortForm <- factor(mergedData$shortForm, levels = c("bL","oW","2W","3W","4W","5W","oM"))          # added oneMonth timepoint
+mergedData$timeCategory <- factor(mergedData$timeCategory, levels = c("Baseline","Post 1st dose","two Weeks", "Pre 2nd dose","Post 2nd dose",
+                                                                      "2 wks post 2nd dose", "One month post\n2nd dose"))
 
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline")
