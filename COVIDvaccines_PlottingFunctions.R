@@ -50,26 +50,20 @@ twoSampleBarMelted <- function (data, xData, yData, fillParam, title, yLabel)
   )
 }
 
-twoSampleBar <- function (data, xData, yData, fillParam, title, yLabel, batch="none", position = "left", FCplot=F, confInt=F, ttest=T, nonparam=F)
+twoSampleBar <- function (data, xData, yData, fillParam, title, yLabel, batch="none", position = "left", FCplot=F, confInt=F, nonparam=F)
 {
   set.seed(102)
-  if (ttest == T && batch == "none" && nonparam == F)
+  if (batch == "none" && nonparam == F)
   {
     justforttest <- data[, c(xData,yData)]
     fit <- rstatix::t_test(justforttest, formula = as.formula(paste(colnames(justforttest)[2], "~", paste(colnames(justforttest)[1]), sep = "") ))
     pValue <- fit$p
   }
-  if (ttest == T && batch == "none" && nonparam == T)
+  if (batch == "none" && nonparam == T)
   {
     justforttest <- data[, c(xData,yData)]
     fit <- rstatix::wilcox_test(justforttest, formula = as.formula(paste(colnames(justforttest)[2], "~", paste(colnames(justforttest)[1]), sep = "") ))
     pValue <- fit$p
-  }
-  if (ttest == F)
-  {
-    if (batch == "none")  {
-      fit <- wilcox_test(data = data, as.formula(paste(yData, xData, sep="~") ));  pValue <- fit$p  }
-    if (batch != "none")  {  fit <- lm(data[,yData] ~ data[,xData] + data[,batch]); pValue <- summary(fit)$coefficients[2,"Pr(>|t|)"];  CI <- confint(fit)[2,]; CI <- round(CI,2)    }
   }
   if (! is.nan(pValue) && confInt == T)
   {
@@ -125,12 +119,22 @@ twoSampleBar <- function (data, xData, yData, fillParam, title, yLabel, batch="n
 }
 
 
-univScatter <- function(data, xData, yData, fillParam, title, xLabel, yLabel, position = "left")
+univScatter <- function(data, xData, yData, fillParam, title, xLabel, yLabel, position = "left", nonparam=F)
 {
-  pearson <- round(cor(data[,xData], data[,yData], method = "pearson", use = "complete.obs"), 2)
-  pValue <- cor.test(data[,xData], data[,yData], method="pearson")
-  if (pValue$p.value < 0.01)   {    annotationInfo <- paste0("Pearson r = ", pearson,"\n","P = ", formatC(pValue$p.value, format="e", digits=1))    }
-  if (pValue$p.value >= 0.01) {    annotationInfo <- paste0("Pearson r = ", pearson,"\n","P = ", round(pValue$p.value,2))   }
+  if(nonparam == F)
+  {
+    pearson <- round(cor(data[,xData], data[,yData], method = "pearson", use = "complete.obs"), 2)
+    pValue <- cor.test(data[,xData], data[,yData], method="pearson")
+  }
+  if(nonparam == T)
+  {
+    pearson <- round(cor(data[,xData], data[,yData], method = "kendall", use = "complete.obs"), 2)
+    pValue <- cor.test(data[,xData], data[,yData], method="kendall")
+  }
+  if (pValue$p.value < 0.01 & nonparam == F)   {    annotationInfo <- paste0("Pearson r = ", pearson,"\n","P = ", formatC(pValue$p.value, format="e", digits=1))    }
+  if (pValue$p.value >= 0.01 & nonparam == F) {    annotationInfo <- paste0("Pearson r = ", pearson,"\n","P = ", round(pValue$p.value,2))   }
+  if (pValue$p.value < 0.01  & nonparam == T)   {    annotationInfo <- paste0("Kendall t = ", pearson,"\n","P = ", formatC(pValue$p.value, format="e", digits=1))    }
+  if (pValue$p.value >= 0.01  & nonparam == T) {    annotationInfo <- paste0("Kendall t = ", pearson,"\n","P = ", round(pValue$p.value,2))   }
   if(position == "left")  { my_grob = grobTree(textGrob(annotationInfo, x=0.05,  y=0.9, hjust=0, gp=gpar(col="black", fontsize=28)))   }
   if(position == "right")  { my_grob = grobTree(textGrob(annotationInfo, x=0.45,  y=0.9, hjust=0, gp=gpar(col="black", fontsize=28)))   }
   if(position == "none") { my_grob = grobTree(textGrob(annotationInfo, x=10,  y=10, hjust=0, gp=gpar(col="black", fontsize=1)))   }
@@ -146,30 +150,47 @@ univScatter <- function(data, xData, yData, fillParam, title, xLabel, yLabel, po
       annotation_custom(my_grob) + theme(legend.position = "none")     )
 }
 
-bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, title, xLabel, yLabel, statsOff = F)
+bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, title, xLabel, yLabel, nonparam=F, statsOff = F)
 {
   if (statsOff == F)
   {  
-    pearson1 <- round(cor(data1[,xData], data1[,yData], method = "pearson", use = "complete.obs"), 2)
-    pValue1 <- cor.test(data1[,xData], data1[,yData], method="pearson")
-    pearson2 <- round(cor(data2[,xData], data2[,yData], method = "pearson", use = "complete.obs"), 2)
-    pValue2 <- cor.test(data2[,xData], data2[,yData], method="pearson")
-    if (pValue1$p.value < 0.01 | pValue2$p.value < 0.01)   {    
-      annotationInfo1 <- paste0(name1, " Pearson r = ", pearson1,"\n","P = ", formatC(pValue1$p.value, format="e", digits=1) )
-      annotationInfo2 <- paste0("\n", name2, " Pearson r = ", pearson2,"\n","P = ", formatC(pValue2$p.value, format="e", digits=1) )  }
-    if (pValue1$p.value >= 0.01 & pValue2$p.value >= 0.01) {    
-      annotationInfo1 <- paste0(name1, " Pearson r = ", pearson1,"\n","P = ", round(pValue1$p.value,2) )
-      annotationInfo2 <- paste0("\n",name2," Pearson r = ", pearson2, "\n","P = ", round(pValue2$p.value,2))   }
-    my_grob1 = grobTree(textGrob(annotationInfo1, x=0.05,  y=0.88, hjust=0, gp=gpar(col="#7FAEDB", fontsize=28)))
-    my_grob2 = grobTree(textGrob(annotationInfo2, x=0.05,  y=0.75, hjust=0, gp=gpar(col="#FFB18C", fontsize=28)))
+
+    if(nonparam == F)
+    {
+      pearson1 <- round(cor(data1[,xData], data1[,yData], method = "pearson", use = "complete.obs"), 2)
+      pValue1 <- cor.test(data1[,xData], data1[,yData], method="pearson")
+      pearson2 <- round(cor(data2[,xData], data2[,yData], method = "pearson", use = "complete.obs"), 2)
+      pValue2 <- cor.test(data2[,xData], data2[,yData], method="pearson")
+      if (pValue1$p.value < 0.01 | pValue2$p.value < 0.01)   {    
+        annotationInfo1 <- paste0(name1, " Pearson r = ", pearson1,"\n","P = ", formatC(pValue1$p.value, format="e", digits=1) )
+        annotationInfo2 <- paste0("\n", name2, " Pearson r = ", pearson2,"\n","P = ", formatC(pValue2$p.value, format="e", digits=1) )  }
+      if (pValue1$p.value >= 0.01 & pValue2$p.value >= 0.01) {    
+        annotationInfo1 <- paste0(name1, " Pearson r = ", pearson1,"\n","P = ", round(pValue1$p.value,2) )
+        annotationInfo2 <- paste0("\n",name2," Pearson r = ", pearson2, "\n","P = ", round(pValue2$p.value,2))   }
+    }
+    if(nonparam == T)
+    {
+      kendall1 <- round(cor(data1[,xData], data1[,yData], method = "kendall", use = "complete.obs"), 2)
+      pValue1 <- cor.test(data1[,xData], data1[,yData], method="kendall")
+      kendall2 <- round(cor(data2[,xData], data2[,yData], method = "kendall", use = "complete.obs"), 2)
+      pValue2 <- cor.test(data2[,xData], data2[,yData], method="kendall")
+      if (pValue1$p.value < 0.01 | pValue2$p.value < 0.01)   {    
+        annotationInfo1 <- paste0(name1, " Kendall t = ", kendall1,"\n","P = ", formatC(pValue1$p.value, format="e", digits=1) )
+        annotationInfo2 <- paste0("\n", name2, " Kendall t = ", kendall2,"\n","P = ", formatC(pValue2$p.value, format="e", digits=1) )  }
+      if (pValue1$p.value >= 0.01 & pValue2$p.value >= 0.01) {    
+        annotationInfo1 <- paste0(name1, " Kendall t = ", kendall1,"\n","P = ", round(pValue1$p.value,2) )
+        annotationInfo2 <- paste0("\n",name2," Kendall t = ", kendall2, "\n","P = ", round(pValue2$p.value,2))   }
+    }
+    my_grob1 = grobTree(textGrob(annotationInfo1, x=0.05,  y=0.88, hjust=0, gp=gpar(col="#FFDFB1", fontsize=28)))
+    my_grob2 = grobTree(textGrob(annotationInfo2, x=0.05,  y=0.75, hjust=0, gp=gpar(col="#B5B2F1", fontsize=28)))
     return (
       ggplot() + 
         geom_point(data = data1, aes_string(x=xData, y=yData, fill= fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_point(data = data2, aes_string(x=xData, y=yData, fill=fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_smooth(data = data1, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
         geom_smooth(data = data2, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
-        scale_color_manual(values=c("#FFB18C", "#7FAEDB")) + 
-        scale_fill_manual(values=c("#FFB18C", "#7FAEDB")) + 
+        scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+        scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
         annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
@@ -183,8 +204,8 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         geom_point(data = data2, aes_string(x=xData, y=yData, fill=fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_smooth(data = data1, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
         geom_smooth(data = data2, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
-        scale_color_manual(values=c("#FFB18C", "#7FAEDB")) + 
-        scale_fill_manual(values=c("#FFB18C", "#7FAEDB")) + 
+        scale_color_manual(values=c("#B5B2F1", "#FFDFB1")) + 
+        scale_fill_manual(values=c("#B5B2F1", "#FFDFB1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
         #annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
@@ -206,7 +227,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
-          geom_point(size = 5, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
+          geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
           scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
           scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -250,7 +271,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
-          geom_point(size = 8, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
+          geom_point(size = 8, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
           scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
           scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -297,8 +318,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
     return( 
       ggplot(data=subsetData, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
-        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
-        geom_point(size = 8, color="black", shape=21, alpha=0.5)  + # facet_wrap(fillParam ) + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.4) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.4)  + # facet_wrap(fillParam ) + 
         scale_color_manual(values=c("#FFDFB1")) + 
         scale_fill_manual(values=c("#FFDFB1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -360,10 +381,11 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     justforttest <- subsetData[, c(xData,yData,fillParam)]
     justforttest[,xData] <- factor(justforttest[,xData])
     temp <- justforttest %>% group_by(eval(as.name(fillParam))) %>% levene_test(eval(as.name(yData)) ~ eval(as.name(xData)))
-    if( any(temp$p < 0.05)) { justforttest[,yData] <- log(justforttest[,yData]+1)}
-    range.data <- range(data[,yData])
-    range.data <- round(c(range.data[1]*0.25, range.data[2]*1.5),digits = 0)
-    breaks <- seq(range.data[1], range.data[2], round((range.data[2]-range.data[1])/5, digits=0))
+    if( any(temp$p < 0.05)) { justforttest[,yData] <- log(justforttest[,yData]+1)}        # log transform if fails equal variance assessment by Levene's test
+    range.data <- range(data[,yData], na.rm = T)
+    range.data <- round(c(range.data[1]*0.25, range.data[2]*1.5),digits = 1)
+    sigfigs <- 0;  if (range.data[2] < 2) { sigfigs <- ifelse(range.data[2] < 0.1, yes = 3, no = 2) }    
+    breaks <- seq(range.data[1], range.data[2], round((range.data[2]-range.data[1])/5, digits=sigfigs))
     if( length(levels(data[,xData])) == 2 )             # two time point Pre-Post, so do paired statistics
     {
       fit <- justforttest %>% group_by(eval(as.name(fillParam))) %>% 
@@ -375,8 +397,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
       my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
       a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
-        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
-        geom_point(size = 8, color="black", shape=21, alpha=0.5)  + # facet_wrap(fillParam ) + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.4) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.4)  + # facet_wrap(fillParam ) + 
         scale_color_manual(c("#FFDFB1")) + 
         scale_fill_manual(values="#2861BC") + #c("#FFDFB1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -389,8 +411,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
       my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
       a.2 <- ggplot(data=data.2, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
-        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
-        geom_point(size = 8, color="black", shape=21, alpha=0.5)  + # facet_wrap(fillParam ) + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.4) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.4)  + # facet_wrap(fillParam ) + 
         scale_color_manual(values=c("#B5B2F1")) + 
         scale_fill_manual(values="orange") + #c("#B5B2F1")) + 
         ggtitle(title) +  xlab(xLabel)  + # ylab(yLabel) +
@@ -465,9 +487,9 @@ prePostTimeAveraged <- function(data, title, xLabel, yLabel)
 
 linePlot <- function(data, xData, yData, groupby, colorby, title, xLabel, yLabel)
 {
-  subsetData <- subset(data, !is.na(mergedData[,yData]));  #subsetData$subsetData[order(subsetData$Label)]
+  subsetData.fxn <- subset(data, !is.na(data[,yData]));  #subsetData$subsetData[order(subsetData$Label)]
   return(
-    ggplot(subsetData, aes_string(x=xData, y=yData, group=groupby)) + 
+    ggplot(subsetData.fxn, aes_string(x=xData, y=yData, group=groupby)) + 
     geom_point(size=2,alpha=0.5) + geom_line(aes_string(group=groupby, color=colorby), size=1, alpha=0.75) +  
     xlab(xLabel) + ylab(yLabel) + theme_bw() + 
     ggtitle(title) + #scale_x_discrete(labels= c("Baseline","1 week","2 weeks","3 weeks","4 weeks")) + 

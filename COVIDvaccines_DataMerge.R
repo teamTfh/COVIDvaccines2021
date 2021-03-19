@@ -19,15 +19,18 @@ sessionInfo()
 #' ------------------ Demographics and SubjectVisit --------------------------
 #'
 
-demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-02-25_1149.csv", colClasses = 'character')    
-if ( !is.na(strptime(demog[1,10], format = "%m/%d/%Y")) )       # don't knowwhy but format shifts with exports, so will acount for both possibilities here
-  demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%m/%d/%Y")} )      # convert date fields to true dates
-if ( !is.na(strptime(demog[1,10], format = "%Y-%m-%d")) )
-  demog[,9:ncol(demog)] <- apply(X = demog[,9:ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%Y-%m-%d")} )    # convert date fields to true dates
+demog <- read.csv(file = "../Data/COVIDvaccinesObserva-CodedReport_DATA_LABELS_2021-03-16_1049.csv", colClasses = 'character')    
+index <- grep(pattern = "Vaccine.1.date", names(demog), value=F)  # search for vax1date in case its position has shifted due to new columns preceding it
+if ( !is.na(strptime(demog[1,index], format = "%m/%d/%Y")) )       # don't know why but format shifts with exports, so will acount for both possibilities here
+  demog[,(index-1):ncol(demog)] <- apply(X = demog[,(index-1):ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%m/%d/%Y")} )      # convert date fields to true dates
+if ( !is.na(strptime(demog[1,index], format = "%Y-%m-%d")) )
+  demog[,(index-1):ncol(demog)] <- apply(X = demog[,(index-1):ncol(demog)], MARGIN = 2, FUN = function(x) { strptime(x, format = "%Y-%m-%d")} )    # convert date fields to true dates
+
+demog <- demog[-which(demog$Notes != ""),]      # exclude anyone with caveats 
 
 demog$Age <- as.numeric(demog$Age)
 demog$Race <- substr(demog$Race, 4, 30)
-index <- grep("Blood",names(demog),value=F)[1]  # start at column 11 which is the first Blood.draw.date field
+index <- grep("Blood",names(demog),value=F)[1]  # start at first Blood.draw.date field
 for(i in index:ncol(demog))    { demog[,i] <- as.numeric(difftime(time1 = demog[,i], time2=demog$Vaccine.1.date, units='days')) }
 names(demog)[grep("Blood.draw",names(demog),value=F)] <- paste0("V",seq(1,length(names(demog[grep("Blood.draw",names(demog),value=F)]))))     # convert to V1-Vx format
 demog$DPO.covid <- round(as.numeric(difftime(time1 = demog$Date.of.Onset.of.Symptoms, time2 = demog$Vaccine.1.date, units = 'days')), 0); demog$Date.of.Onset.of.Symptoms <- NULL
@@ -71,23 +74,23 @@ demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V5' & demog.m
   
 # -------- 2 wks post 2nd dose --------------  
 demog.melt[which( grep(pattern="6$", x = demog.melt$Label, value=F) & demog.melt$Label == "HV-084_V6"),"shortForm"] <- "5W" 
-  demog.melt[which( grep(pattern="6$", x = demog.melt$Label, value=F) & demog.melt$Label == "HV-084_V6"),"timeCategory"] <- "2 wks Post 2nd dose"
+  demog.melt[which( grep(pattern="6$", x = demog.melt$Label, value=F) & demog.melt$Label == "HV-084_V6"),"timeCategory"] <- "2 wks post 2nd dose"
 
 demog.melt[which(demog.melt$Label== "PHI-053_V3"),"shortForm"] <- '4W'
 demog.melt[which(demog.melt$Label== "PHI-053_V3"),"timeCategory"] <- 'Post 2nd dose'
 
 # -------- One month post 2nd dose -------------- 
-demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post\n2nd dose"
+demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 40:60 ),"shortForm"] <- "oM" 
+demog.melt[which( demog.melt$Visit == 'V4' & demog.melt$DPV %in% 40:60),"timeCategory"] <- "One month post\n2nd dose"
 
-demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 48:60),"timeCategory"] <- "One month post\n2nd dose"
+demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 40:60 ),"shortForm"] <- "oM" 
+demog.melt[which( demog.melt$Visit == 'V5' & demog.melt$DPV %in% 40:60),"timeCategory"] <- "One month post\n2nd dose"
 
-demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post\n2nd dose"
+demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 40:60 ),"shortForm"] <- "oM" 
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V6' & demog.melt$DPV %in% 40:60 ),"timeCategory"] <- "One month post\n2nd dose"
 
-demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"shortForm"] <- "oM" 
-demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 48:60 ),"timeCategory"] <- "One month post\n2nd dose"
+demog.melt[which(demog.melt$shortForm == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 40:60 ),"shortForm"] <- "oM" 
+demog.melt[which(demog.melt$timeCategory == "" & demog.melt$Visit == 'V7' & demog.melt$DPV %in% 40:60 ),"timeCategory"] <- "One month post\n2nd dose"
 
 #demog.melt[which(demog.melt$DPV <2),]$shortForm <- "bL"; demog.melt[which(demog.melt$DPV <2),]$timeCategory <- "Baseline" 
 #demog.melt[which(demog.melt$DPV %in% 2:12),]$shortForm <- "oW"; demog.melt[which(demog.melt$DPV %in% 2:12),]$timeCategory <- "oneWeek" 
@@ -120,6 +123,12 @@ ASCelispot <- read.csv("../Data/ASCelispot.csv")
 CXCL13 <- read.csv("../Data/CXCL13.csv")
 
 
+#' ------------------ Avidity --------------------------                  
+#'
+
+avidity <- read.csv("../Data/avidity.csv")
+
+
 
 #' ------------------ Flow Cytometry --------------------------
 #'
@@ -130,26 +139,26 @@ names(flowData.freq)[1] <- "fcsFile"                # simple name
 flowData.freq <- flowData.freq[-which(flowData.freq$fcsFile == "CV-022_PHI-021_bL_HEP_Live.fcs"),]           # exclude CV-022_PHI-021_bL due to failed QC
 
 # flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390-bL_HEP.fcs")] <- "CV-033_PHI-390_bL_HEP.fcs"   # correct transcribing error
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-002_HV081_oW_HEP_Live.fcs")] <- "CV-002_HV-081_oW_HEP_Live.fcs"   
-# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-003_HV-076_HEP.fcs")] <- "CV-003_HV-076_oW_HEP.fcs"  ---fixed in flow jo 
-# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-019_HV-068_HEP.fcs")] <- "CV-019_HV-068_bL_HEP.fcs"  ---fixed in flow jo 
-# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-017_HV-003_HEP.fcs")] <- "CV-017_HV-003_bL_HEP.fcs"  ---fixed in flow jo 
-# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-018_PHI-074_HEP.fcs")] <- "CV-018_PHI-074_bL_HEP.fcs"  ---fixed in flow jo 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-005_PHI-071_2W_HEP_Live.fcs")] <- "CV-005_PHI-071_oW_HEP_Live.fcs"  
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-002_HV081_oW_HEP_Live.fcs")] <- "CV-002_HV-081_oW_HEP_Live.fcs"      # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-003_HV-076_HEP.fcs")] <- "CV-003_HV-076_oW_HEP.fcs"  # ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-019_HV-068_HEP.fcs")] <- "CV-019_HV-068_bL_HEP.fcs"  # ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-017_HV-003_HEP.fcs")] <- "CV-017_HV-003_bL_HEP.fcs"  # ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201229_CV-018_PHI-074_HEP.fcs")] <- "CV-018_PHI-074_bL_HEP.fcs"  # ---fixed in flow jo 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-005_PHI-071_2W_HEP_Live.fcs")] <- "CV-005_PHI-071_oW_HEP_Live.fcs"  # ---fixed in flow jo (rsh)
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-006_HV-018_2W_HEP_Live.fcs")] <- "CV-006_HV-018_3W_HEP_Live.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-006_HV-018_2W_HEP_Live.fcs")] <- "CV-006_HV-018_3W_HEP_Live.fcs"  # ---fixed in flow jo (rsh)
 # flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_HV-003_3W_HEP_Live.fcs")] <- "CV-017_HV-003_3W_HEP_Live.fcs" ---fixed in flow jo
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-027_PHI-313_2W_HEP_Live.fcs")] <- "CV-027_PHI-313_oW_HEP_Live.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-025_PHI-315_2W_HEP_Live.fcs")] <- "CV-025_PHI-315_oW_HEP_Live.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_bL_HEP_Live.fcs")] <- "CV-020_PHI-050_oW_HEP_Live.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_2W_HEP_Live.fcs")] <- "CV-020_PHI-050_3W_HEP_Live.fcs"
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-026_PHI-052_2W_HEP_Live.fcs")] <- "CV-026_PHI-052_oW_HEP_Live.fcs"
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-027_PHI-313_2W_HEP_Live.fcs")] <- "CV-027_PHI-313_oW_HEP_Live.fcs"  # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-025_PHI-315_2W_HEP_Live.fcs")] <- "CV-025_PHI-315_oW_HEP_Live.fcs"   # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_bL_HEP_Live.fcs")] <- "CV-020_PHI-050_oW_HEP_Live.fcs"   # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-020_PHI-050_2W_HEP_Live.fcs")] <- "CV-020_PHI-050_3W_HEP_Live.fcs"   # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-026_PHI-052_2W_HEP_Live.fcs")] <- "CV-026_PHI-052_oW_HEP_Live.fcs"   # ---fixed in flow jo (rsh)
 # flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-024_HV-085_4W_HEP_Live.fcs")] <- "CV-024_HV-085_3W_HEP_Live.fcs" ---fixd in flow jo 
 # flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-033_PHI-390_4W_HEP_Live.fcs")] <- "CV-033_PHI-390_3W_HEP_Live.fcs"	---fixed in flow jo
 
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_4W_HEP_Live.fcs")] <- "CV-015_PHI-048_3W_HEP_Live.fcs"	
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_5W_HEP_Live.fcs")] <- "CV-015_PHI-048_4W_HEP_Live.fcs"	
-flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_PHI-072-4W_HEP_Live.fcs")] <- "CV-010_PHI-072_4W_HEP_Live.fcs"	
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_4W_HEP_Live.fcs")] <- "CV-015_PHI-048_3W_HEP_Live.fcs"   # ---fixed in flow jo (rsh)	 
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-015_PHI-048_5W_HEP_Live.fcs")] <- "CV-015_PHI-048_4W_HEP_Live.fcs"	   # ---fixed in flow jo (rsh)
+# flowData.freq$fcsFile[which(flowData.freq$fcsFile == "CV-010_PHI-072-4W_HEP_Live.fcs")] <- "CV-010_PHI-072_4W_HEP_Live.fcs"	   # ---fixed in flow jo (rsh)
 
 
 # flowData.freq$fcsFile[which(flowData.freq$fcsFile == "20201218_COVID Vaccines immunoprofiling-3-20210126-CV-031_PHI-046_3W_HEP_Unmixed.fcs")] <- "CV-031_PHI-046_3W_HEP.fcs" --- fixed in flow jo
@@ -172,22 +181,21 @@ flowDataPHIbL.freq <- read.csv(file="../Data/ByParent_PHI Baselines.csv")       
 flowDataPHIbL.freq <- flowDataPHIbL.freq[-grep(paste(c("Mean","SD"),collapse = "|"), flowDataPHIbL.freq$X, value=F), ]         # delete the Mean and SD rows
 names(flowDataPHIbL.freq)[1] <- "fcsFile"                # simple name
 
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "200902_PHI Samples_JA-Group_001-PHI-48 V4_Unmixed.fcs")] <- "CV-015_PHI-048_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20200917_FluVax_PHI_37colors-Unmixed1-20200921_PHI sample_JA-20200921_PHI-52 V4_Unmixed.fcs")] <- "CV-026_PHI-052_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20200917_heratr01_FluVaccine_37color-20200918_PBMC`s samples_JA-20200915_PHI-58 V3_Unmixed.fcs")] <- "CV-034_PHI-058_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201014_Flu samples_prev unmixed_JA--20201014_Flu Samples_JA-20201014_PHI-046 V5_Unmixed.fcs")] <- "CV-031_PHI-046_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201106_Flu and PHI samples_JA--20201105_PHI Samples_JA-20201105_PHI-313 V4_Unmixed.fcs")] <- "CV-027_PHI-313_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201106_Flu and PHI samples_JA--20201112_Flu + PHI sample_JA-20201112_PHI-398 V3_Unmixed.fcs")] <- "CV-028_PHI-398_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201203_PHI and HV_JA-20201203_PHI-050 V3_Unmixed.fcs")] <- "CV-020_PHI-050_bL_CPT.fcs"
-flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201210_PHI Sample_JA-20201207_PHI-315 V3_Unmixed.fcs")] <- "CV-025_PHI-315_bL_CPT.fcs"
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "200902_PHI Samples_JA-Group_001-PHI-48 V4_Unmixed.fcs")] <- "CV-015_PHI-048_bL_CPT.fcs"    # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20200917_FluVax_PHI_37colors-Unmixed1-20200921_PHI sample_JA-20200921_PHI-52 V4_Unmixed.fcs")] <- "CV-026_PHI-052_bL_CPT.fcs"    # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20200917_heratr01_FluVaccine_37color-20200918_PBMC`s samples_JA-20200915_PHI-58 V3_Unmixed.fcs")] <- "CV-034_PHI-058_bL_CPT.fcs"     # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201014_Flu samples_prev unmixed_JA--20201014_Flu Samples_JA-20201014_PHI-046 V5_Unmixed.fcs")] <- "CV-031_PHI-046_bL_CPT.fcs"    # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201106_Flu and PHI samples_JA--20201105_PHI Samples_JA-20201105_PHI-313 V4_Unmixed.fcs")] <- "CV-027_PHI-313_bL_CPT.fcs"    # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201106_Flu and PHI samples_JA--20201112_Flu + PHI sample_JA-20201112_PHI-398 V3_Unmixed.fcs")] <- "CV-028_PHI-398_bL_CPT.fcs"    # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201203_PHI and HV_JA-20201203_PHI-050 V3_Unmixed.fcs")] <- "CV-020_PHI-050_bL_CPT.fcs"     # ---fixed in flow jo (rsh)
+# flowDataPHIbL.freq$fcsFile[which(flowDataPHIbL.freq$fcsFile == "20201204_Flu and PHI samples_JA-20201210_PHI Sample_JA-20201207_PHI-315 V3_Unmixed.fcs")] <- "CV-025_PHI-315_bL_CPT.fcs"     # ---fixed in flow jo (rsh)
 
-flowDataPHIbL.freq <- flowDataPHIbL.freq[-which(flowDataPHIbL.freq$fcsFile == "CV-015_PHI-048_bL_CPT.fcs"),]           # exclude CV-014_PHI-048_bL -- will use oD as baseline
-
+flowDataPHIbL.freq <- flowDataPHIbL.freq[-which(flowDataPHIbL.freq$fcsFile == "CV-015_PHI-048_bL_CPT.fcs"),]           # exclude CV-015_PHI-048_bL -- will use oD as baseline
 
 flowData.freq <- rbind(flowData.freq, flowDataPHIbL.freq) #merging ByParent and ByParent_PHIbaselines 
 
 
-flowData.freq <- flowData.freq[-grep("CV-013", flowData.freq$fcsFile, value=F), ] # exclude due to active COVID at time of vaccination so uncertain cohort
+# flowData.freq <- flowData.freq[-grep("CV-013", flowData.freq$fcsFile, value=F), ] # exclude due to active COVID at time of vaccination so uncertain cohort
 
 a <- do.call(rbind.data.frame, strsplit(flowData.freq$fcsFile, "_"))      # split FCS file name by underscore
 names(a) <- c("Record.ID","Alias","categoricalVisit","Tube","overflow")
@@ -214,8 +222,8 @@ benchling$Aliq.of.5m <- as.numeric(substr(benchling$Aliq.of.5m, start=1,stop=2))
 # benchling <- benchling[ , -c(9:17)]                             # eliminate columns about inventory
 # benchling[grep(pattern = "PHI-72", x=benchling$Alias, value=F),"Alias"] <- "PHI-072"
 # benchling[grep(pattern = "PHI-315 ", x=benchling$Alias, value=F),"Alias"] <- "PHI-315"
-ggplot(data = benchling, aes(x=TimeCategory, y=Aliq.of.5m)) + geom_point() + theme_bw() + 
-  theme(axis.text.x = element_text(angle=45, hjust=1,vjust=1) ) +   facet_wrap(~Alias)
+
+# ggplot(data = benchling, aes(x=TimeCategory, y=Aliq.of.5m)) + geom_point() + theme_bw() + theme(axis.text.x = element_text(angle=45, hjust=1,vjust=1) ) +   facet_wrap(~Alias)
 
 
 #' ------------------ merge Data  --------------------------
@@ -225,11 +233,12 @@ merge.1 <-  merge(x=demog, y=demog.melt, all=T, by=c("Record.ID","Alias"))
 merge.serology <- merge(x = totBinding, y=neutAb, all=T, by=c("Label"))
 merge.serology <- merge(x = merge.serology, y=ASCelispot, all=T,  by=c("Label"))
 merge.2 <- merge(x = merge.1, y = merge.serology, all = T, by=c("Label"))
-merge.3 <- merge(x = merge.2, y = CXCL13, all=T, by=c("Label"))
-merge.4 <- merge(x = merge.3, y = flowData.freq, all=T, by.x=c("Alias","shortForm", "Record.ID"), by.y = c("Alias","categoricalVisit","Record.ID"))
+merge.3 <- merge(x = merge.2, y = avidity, all=T, by=c("Label"))
+merge.4 <- merge(x = merge.3, y = CXCL13, all=T, by=c("Label"))
+merge.5 <- merge(x = merge.4, y = flowData.freq, all=T, by.x=c("Alias","shortForm", "Record.ID"), by.y = c("Alias","categoricalVisit","Record.ID"))
 
 
-mergedData <- merge.4
+mergedData <- merge.5
 
 # mergedData <- merge(x = benchling, y=flowData.freq, by.x = c("Record.ID","Alias","shortForm"), by.y = c("Record.ID","Alias","categoricalVisit") ) 
 # mergedData <- merge(x=demog, y=mergedData, by=c("Record.ID","Alias"))           # not elegant but it'll do
@@ -241,49 +250,78 @@ mergedData$shortForm <- factor(mergedData$shortForm, levels = c("bL","oW","2W","
 mergedData$timeCategory <- factor(mergedData$timeCategory, levels = c("Baseline","Post 1st dose","two Weeks", "Pre 2nd dose","Post 2nd dose",
                                                                       "2 wks post 2nd dose", "One month post\n2nd dose"))
 
-
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline")
 FC_response <- dcast(subsetData, `Record.ID`+`Alias` ~`timeCategory`, value.var = c("CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent"))
 FC_response$FCtfh_Vax1 <- FC_response$`Post 1st dose`/FC_response$Baseline
+saveNames <- c("FCtfh_Vax1")
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD19_.Nonnaive.B.CD27..CD38._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD19_.CD27..CD38._FreqParent")) 
 FC_response2$FCPB_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCPB_Vax1")
 
 subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent")) 
 FC_response2$FCtfh_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCtfh_Vax2")
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline" | timeCategory == "oneDay")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.CD38.Ki67._FreqParent")) 
 FC_response2$FCActivCD4_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCActivCD4_Vax1")
+
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD8_.CD38.Ki67._FreqParent")) 
 FC_response2$FCActivCD8_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCActivCD8_Vax1")
+
+subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.CD38.Ki67._FreqParent")) 
+FC_response2$FCActivCD4_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCActivCD4_Vax2")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD8_.CD38.Ki67._FreqParent")) 
+FC_response2$FCActivCD8_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCActivCD8_Vax2")
+
+
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline" | timeCategory == "oneDay")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("binding_IgG_S1")) 
 FC_response2$FC_IgG_S1_postVax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FC_IgG_S1_postVax1")
 
 subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("binding_IgG_S1")) 
 FC_response2$FC_IgG_S1_postVax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FC_IgG_S1_postVax2")
 
 subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Post 1st dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("Elispot_IgG_S1")) 
 FC_response2$FC_Elispot_IgG_S1 <- FC_response2$`Post 2nd dose`/FC_response2$`Post 1st dose`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FC_Elispot_IgG_S1")
+
+# subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
+# FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("Elispot_IgG_S1")) 
+# FC_response2$FC_Elispot_IgG_S1 <- FC_response2$`Post 2nd dose`/FC_response2$`Post 1st dose`; FC_response2$Cohort <- NULL
+# FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+# saveNames <- c(saveNames, "FC_Elispot_IgG_S1")
+# 
+# subsetData$CD19_.Nonnaive.B.CD27..CD38..CD138._FreqParent <- subsetData$CD19_.Nonnaive.B.CD27..CD38..CD138._FreqParent * subsetData$CD19_.Nonnaive.B.CD27..CD38._FreqParent / 100
 
 
-
-FC_response <- FC_response[, c("Record.ID","Alias","FCtfh_Vax1","FCtfh_Vax2","FCActivCD4_Vax1","FCActivCD8_Vax1","FCPB_Vax1", "FC_IgG_S1_postVax1", 
-                               "FC_IgG_S1_postVax2", "FC_Elispot_IgG_S1")]
+FC_response <- FC_response[, c("Record.ID","Alias",saveNames)]
 mergedData <- merge(x = mergedData, y= FC_response, all=T, by = c('Record.ID', 'Alias'))
+
+
+
 
 #' ------------------ Final data object --------------------------
 #'
