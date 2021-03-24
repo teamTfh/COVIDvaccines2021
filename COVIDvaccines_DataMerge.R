@@ -262,10 +262,29 @@ FC_response <- merge(x=FC_response, y=FC_response2, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FCPB_Vax1")
 
 subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD19_.CD27..CD38._FreqParent")) 
+FC_response2$FCPB_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCPB_Vax2")
+
+subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent")) 
 FC_response2$FCtfh_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FCtfh_Vax2")
+
+subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent")) 
+FC_response2$FCtfh_CXCR3_Vax1 <- FC_response2$`Post 1st dose`/FC_response2$Baseline; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCtfh_CXCR3_Vax1")
+
+subsetData <- subset(mergedData, timeCategory == "Post 2nd dose" | timeCategory == "Pre 2nd dose")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent")) 
+FC_response2$FCtfh_CXCR3_Vax2 <- FC_response2$`Post 2nd dose`/FC_response2$`Pre 2nd dose`; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FCtfh_CXCR3_Vax2")
+
 
 subsetData <- subset(mergedData, timeCategory == "Post 1st dose" | timeCategory == "Baseline" | timeCategory == "oneDay")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("CD4_.CD38.Ki67._FreqParent")) 
@@ -325,7 +344,7 @@ mergedData <- merge(x = mergedData, y= FC_response, all=T, by = c('Record.ID', '
 
 #' ------------------ Final data object --------------------------
 #'
-
+mergedData <- mergedData[- which(is.na(mergedData$timeCategory) ),]
 saveRDS(mergedData, file = "mergedData.Rds")
 # write.csv(mergedData, file = "../Data/mergedData.csv")
 
