@@ -213,39 +213,21 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
   }
 }
 
-prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform = F)
+prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform = F, pathOff = F)
 {
   data[,fillParam] <- factor(data[,fillParam])
-  print(levels(data[,fillParam]))
-  # if(repMeasures==F  && exponential==T)              # original, not repeated measures, permits several cohorts, intended for continuous variable
-  # {
-  #   targets <- which(table(data$Record.ID) > 0)         
-  #   subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]
-  #   subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
-  #   if(length(levels(as.factor(data[,fillParam])))>1)
-  #   {  
-  #     return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
-  #       ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
-  #         geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
-  #         geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
-  #         scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-  #         scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-  #         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
-  #         theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
-  #               plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
-  #               legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white"))  
-  #     )
-  #   }
-  # }
-  
+  # print(levels(data[,fillParam]))
+
   ##  ----------------------------------------------------------------------------------------------------------------
   if(repMeasures==F  && length(levels(data[,fillParam]))==2  && exponential==T)        # not repeated measures, two cohorts, exponential scale
   {
+    print( "block1")
     targets <- which(table(data$Record.ID) > 0)        
     subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]
     subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
-    if(length(levels(as.factor(data[,fillParam])))>1)     
+    if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == F)     
     {  
+      print("Block1-subblock1")
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
@@ -259,15 +241,31 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
           scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
         )
     }
+    if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == T)     
+    {  
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+        ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
+          # geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
+          geom_point(size = 8, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
+          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
+          theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
+                plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
+                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + 
+          scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+      )
+    }
   }
+  ##  ----------------------------------------------------------------------------------------------------------------
   
   if(repMeasures==F && length(levels(data[,fillParam]))==2  && exponential==F && newform == F)         # not repeated measures, two cohorts, normal scale
   {
-    print( "_")
+    print( "block2")
     targets <- which(table(data$Record.ID) > 0)       
     subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]
     subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
-    if(length(levels(as.factor(data[,fillParam])))>1)
+    if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == F)
     {  
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
@@ -281,11 +279,25 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
                 legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) 
       )
     }
+    if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == T)
+    {  
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+        ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
+          # geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
+          geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
+          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
+          theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
+                plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
+                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) 
+      )
+    }
   }
   
   if(repMeasures==F && length(levels(data[,fillParam]))==2  && exponential==F && newform == T)         # not repeated measures, two cohorts, normal scale, new format
   {
-    print(" __")
+    print("block3")
     targets <- which(table(data$Record.ID) > 0)       
     subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]
     subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
