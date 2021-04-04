@@ -92,11 +92,11 @@ twoSampleBar <- function (data, xData, yData, fillParam, title, yLabel, batch="n
   overTime <- aggregate(x = data[,yData], by= list( data[,xData]), FUN=mean, na.rm = T)
   names(overTime)[which(names(overTime) == 'Group.1')] <- xData
   names(overTime)[which(names(overTime) == 'x')] <- yData
-  # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+  # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
   if (FCplot == T)
 
     return (
-      ggplot(data=data, aes_string(x=xData, y=yData, fill=fillParam, width=0.6)) + scale_fill_manual(values = c("#FFDFB1", "#B5B2F1")) + 
+      ggplot(data=data, aes_string(x=xData, y=yData, fill=fillParam, width=0.6)) + scale_fill_manual(values = c("#FFC26A", "#B5B2F1")) + 
         geom_hline(yintercept=1, linetype="dashed", color = "black", size=0.5) + 
         geom_bar(data=overTime, aes_string(x=xData, y=yData), position = position_dodge(), stat = "identity", color='black',size=0.1) + 
         geom_point(size=7, pch=21, fill="black", color="white", alpha=0.5, position = position_jitter(width=0.15)) + 
@@ -107,7 +107,7 @@ twoSampleBar <- function (data, xData, yData, fillParam, title, yLabel, batch="n
     )
   if (FCplot == F)
     return (
-      ggplot(data=data, aes_string(x=xData, y=yData, fill=fillParam, width=0.6)) + scale_fill_manual(values = c("#FFDFB1", "#B5B2F1")) + 
+      ggplot(data=data, aes_string(x=xData, y=yData, fill=fillParam, width=0.6)) + scale_fill_manual(values = c("#FFC26A", "#B5B2F1")) + 
         geom_bar(data=overTime, aes_string(x=xData, y=yData), position = position_dodge(), stat = "identity", color='black',size=0.1) + 
         # geom_point(size=7, pch=21, fill="black", color="white", alpha=0.5, position = position_jitter(width=0.15)) + 
         ggbeeswarm::geom_quasirandom(size=7, pch=21, fill="black",color="white",alpha=0.5, width = 0.2) + 
@@ -181,7 +181,7 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         annotationInfo1 <- paste0(name1, " Kendall t = ", kendall1,"\n","P = ", round(pValue1$p.value,2) )
         annotationInfo2 <- paste0("\n",name2," Kendall t = ", kendall2, "\n","P = ", round(pValue2$p.value,2))   }
     }
-    my_grob1 = grobTree(textGrob(annotationInfo1, x=0.05,  y=0.88, hjust=0, gp=gpar(col="#FFD08C", fontsize=28)))
+    my_grob1 = grobTree(textGrob(annotationInfo1, x=0.05,  y=0.88, hjust=0, gp=gpar(col="#FFC26A", fontsize=28)))
     my_grob2 = grobTree(textGrob(annotationInfo2, x=0.05,  y=0.75, hjust=0, gp=gpar(col="#B5B2F1", fontsize=28)))
     return (
       ggplot() + 
@@ -189,8 +189,8 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         geom_point(data = data2, aes_string(x=xData, y=yData, fill=fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_smooth(data = data1, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
         geom_smooth(data = data2, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
-        scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-        scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+        scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+        scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
         annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
@@ -204,8 +204,8 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         geom_point(data = data2, aes_string(x=xData, y=yData, fill=fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_smooth(data = data1, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
         geom_smooth(data = data2, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
-        scale_color_manual(values=c("#B5B2F1", "#FFDFB1")) + 
-        scale_fill_manual(values=c("#B5B2F1", "#FFDFB1")) + 
+        scale_color_manual(values=c("#B5B2F1", "#FFC26A")) + 
+        scale_fill_manual(values=c("#B5B2F1", "#FFC26A")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
         #annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
@@ -228,12 +228,12 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == F)     
     {  
       print("Block1-subblock1")
-      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
           geom_point(size = 8, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
-          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
@@ -243,12 +243,12 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     }
     if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == T)     
     {  
-      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           # geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
           geom_point(size = 8, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
-          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
@@ -267,12 +267,12 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
     if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == F)
     {  
-      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
           geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
-          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
@@ -281,12 +281,12 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     }
     if(length(levels(as.factor(data[,fillParam])))>1 & pathOff == T)
     {  
-      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           # geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
           geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
-          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + 
+          scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
@@ -335,8 +335,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       ggplot(data=subsetData, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
         geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
         geom_point(size = 8, color="black", shape=21, alpha=0.5)  +  
-        scale_color_manual(values=c("#FFDFB1")) + 
-        scale_fill_manual(values=c("#FFDFB1")) + 
+        scale_color_manual(values=c("#FFC26A")) + 
+        scale_fill_manual(values=c("#FFC26A")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
               legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob) + 
@@ -358,8 +358,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       ggplot(data=subsetData, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
         geom_path(aes_string(group=groupby), color="grey70", alpha=0.4) + 
         geom_point(size = 8, color="black", shape=21, alpha=0.4)  + # facet_wrap(fillParam ) + 
-        scale_color_manual(values=c("#FFDFB1")) + 
-        scale_fill_manual(values=c("#FFDFB1")) + 
+        scale_color_manual(values=c("#FFC26A")) + 
+        scale_fill_manual(values=c("#FFC26A")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
               legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob)
@@ -387,8 +387,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
       geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
       geom_point(size = 8, color="black", shape=21, alpha=0.5)  +  
-      scale_color_manual(values=c("#FFDFB1")) + 
-      scale_fill_manual(values=c("#FFDFB1")) + 
+      scale_color_manual(values=c("#FFC26A")) + 
+      scale_fill_manual(values=c("#FFC26A")) + 
       ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
       theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
             axis.text.x = element_text(angle=45,hjust=1,vjust=1),
@@ -437,8 +437,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
         geom_path(aes_string(group=groupby), color="grey70", alpha=0.4) + 
         geom_point(size = 8, color="black", shape=21, alpha=0.4)  + # facet_wrap(fillParam ) + 
-        scale_color_manual(c("#FFDFB1")) + 
-        scale_fill_manual(values="#2861BC") + #c("#FFDFB1")) + 
+        scale_color_manual(c("#FFC26A")) + 
+        scale_fill_manual(values="#2861BC") + #c("#FFC26A")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
               axis.text.x = element_text(angle=45,hjust=1,vjust=1), legend.position = "none", strip.text = element_text(size = 24, color="black"), 
@@ -466,8 +466,8 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
         geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
         geom_point(size = 8, color="black", shape=21, alpha=0.5)  + 
-        scale_color_manual(values=c("#FFDFB1")) + 
-        scale_fill_manual(values=c("#FFDFB1")) + 
+        scale_color_manual(values=c("#FFC26A")) + 
+        scale_fill_manual(values=c("#FFC26A")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
               axis.text.x = element_text(angle=45,hjust=1,vjust=1),
