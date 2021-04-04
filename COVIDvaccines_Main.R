@@ -19,22 +19,29 @@ mergedData <- readRDS(file = "mergedData.Rds")
 # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
 if("PHI-046" %in% mergedData$Alias)  {mergedData <- mergedData[-which(mergedData$Alias == "PHI-046"),] }          # only Moderna recipient, will temporarily exclude
 if("HV-083" %in% mergedData$Alias)  {mergedData <- mergedData[-which(mergedData$Alias == "HV-083"),]   }          # exclude due to active COVID at time of vaccination so uncertain cohort    
-if("PHI-390" %in% mergedData$Alias)  {mergedData <- mergedData[-which(mergedData$Alias == "PHI-390"),]   }        # exclude due to missing fcs file for 3w
-
 
 #' ------------------ Cohort description --------------------------
 #'
-keepList <- paste0("CV-",sprintf("%03d", seq(1,33,1)))
+keepList <- paste0("CV-",sprintf("%03d", seq(1,34,1)))
 keepList <- keepList[-which(keepList == "CV-013" | keepList == "CV-031")]
+mergedData <- mergedData[ mergedData$Record.ID %in% keepList, ]
 temp <- mergedData[which(mergedData$Record.ID %in% keepList),] %>% group_by(Prior.COVID.infection., timeCategory) %>% get_summary_stats(type = 'common')
 # write.csv(temp, file = "summaryStatistics.csv")
 
-temp <- demog.melt[which(demog.melt$Record.ID %in% keepList), ]  # cut off at CV-033
-temp <- temp[-which(temp$timeCategory == "2 wks Post 2nd dose" | temp$timeCategory == ""),]
+subsetData <- subset(mergedData, timeCategory == "Baseline")
+table(subsetData$Prior.COVID.infection., subsetData$Sex)
+table(subsetData$Prior.COVID.infection., subsetData$Race)
+
+
+
+temp <- demog.melt[which(demog.melt$Record.ID %in% keepList), ]  
+temp <- temp[-which(temp$timeCategory == "2 wks Post 2nd dose" | temp$timeCategory == "" | temp$shortForm == "5W"),]
 temp$timeCategory <- factor(temp$timeCategory, levels = c("Baseline", "Post 1st dose", "two Weeks", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose"))
+# temp <- temp[-is.na(temp$timeCategory),]
 
 ggplot(data = temp, aes(x = DPV, y = Record.ID, group = Record.ID)) + geom_vline(xintercept = 0, linetype = "dashed", alpha=0.5) + geom_path() + 
-  geom_point(aes(color = timeCategory), size=4) + theme_bw()  + xlab("Days relative to vaccine dose 1") + ylab("") + 
+  geom_point(aes(fill = timeCategory, shape = timeCategory), size=4) + theme_bw()  + xlab("Days relative to vaccine dose 1") + ylab("") + 
+  scale_shape_manual(values=c(20:25)) + scale_fill_viridis_d() + 
   theme(axis.text = element_text(color="black",size=16), axis.title = element_text(color="black",size=16), axis.text.y = element_blank()) + 
   scale_x_continuous(breaks = seq(-50,60,10))
 # ggsave(filename = "./Images/Subject_timecourse_overview.pdf")
@@ -62,15 +69,20 @@ omiqID <- omiqID[, c(2,1, 3:ncol(omiqID))]
 
 #' ------------------ Antibody analyses --------------------------
 #'
-
-# subsetData <- subset(mergedData, timeCategory != "two Weeks")
-linePlot(data = mergedData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
+subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; 
+subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose"))
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
          title = "anti-S1 IgG titer", colorby = "Prior.COVID.infection.") + 
   scale_color_manual(name="Prior COVID?",values = c("#FFDFB1","#B5B2F1")) + 
-  geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=6,y=15,label = "LOD", color="black", alpha=0.2)+
+  geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e7), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ 
 # ggrepel::geom_text_repel(data = subset(mergedData, Alias =="HV-002"), aes(label = Label))
 # ggsave(filename = "./Images/BindingAb_S1_IgG_linePlot.pdf")
+
+
+fit <- aov(binding_IgG_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit)
+fit <- aov(binding_IgG_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit)
+
 
 twoSampleBar(data = subset(mergedData, timeCategory == "Post 2nd dose"), xData = "Prior.COVID.infection.", yData = "binding_IgG_S1", fillParam = "Prior.COVID.infection.", 
              title = "Post 2nd dose", yLabel = "anti-S1 IgG titer", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e7),) + 
@@ -78,15 +90,18 @@ twoSampleBar(data = subset(mergedData, timeCategory == "Post 2nd dose"), xData =
 # ggsave(filename = "./Images/BindingAb_S1_IgG_post2ndDose.pdf", width=5)
 
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] 
-subsetData <- subsetData[-which(subsetData$timeCategory == "One month post\n2nd dose"),] 
-subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose"))
+subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose"))
 linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgA_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgA titer", 
          title = "anti-S1 IgA titer", colorby = "Prior.COVID.infection.") + 
   geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=4,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_color_manual(name="Prior COVID?",values = c("#FFDFB1","#B5B2F1")) + 
-  scale_y_continuous(trans='pseudo_log', limits = c(0,1e5), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ 
+  scale_y_continuous(trans='pseudo_log', limits = c(0,1e6), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ 
   # ggrepel::geom_text_repel(data = subset(mergedData, Alias =="HV-002"), aes(label = Label))
 # ggsave(filename = "./Images/BindingAb_S1_IgA_linePlot.pdf")
+
+fit <- aov(binding_IgA_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit)
+fit <- aov(binding_IgA_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit)
+
 
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; 
 # subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose"))
@@ -96,6 +111,15 @@ linePlot(data = subsetData, xData = 'timeCategory', yData = 'IC50_neutAb_log10',
   scale_color_manual(name="Prior COVID?",values = c("#FFDFB1","#B5B2F1")) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e5), breaks=c(10^(0:6)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ ggrepel::geom_text_repel(aes(label = Label))
 # ggsave(filename = "./Images/neutAb_linePlot.pdf")
+
+fit <- aov(IC50_neutAb_log10 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit)
+fit <- aov(IC50_neutAb_log10 ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit)
+
+twoSampleBar(data = subset(mergedData, timeCategory == "Post 1st dose"), xData = "Prior.COVID.infection.", yData = "IC50_neutAb_log10", fillParam = "Prior.COVID.infection.", 
+             title = "Post 1st dose", yLabel = "Neutralizing antibodies", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e5),) + 
+  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ ggrepel::geom_text_repel(aes(label = Label))
+
+
 
 twoSampleBar(data = subset(mergedData, timeCategory == "Post 2nd dose"), xData = "Prior.COVID.infection.", yData = "IC50_neutAb_log10", fillParam = "Prior.COVID.infection.", 
              title = "Post 2nd dose", yLabel = "Neutralizing antibodies", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e5),) + 
@@ -478,6 +502,135 @@ prePostTime(data=subsetData, xData = "shortForm", yData="CD8_.CD38.Ki67._FreqPar
 
 
 
+
+
+#' ------------------ Correlational analyses --------------------------
+#' 
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "FCActivCD4_Vax1", yData = "FCActivCD8_Vax1", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
+  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
+  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax1.pdf", width=8)
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "FCActivCD4_Vax2", yData = "FCActivCD8_Vax2", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
+  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
+  scale_y_continuous(trans='pseudo_log', limits = c(0,200), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
+
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose")
+subsetData <- subsetData[,grep("^FCActiv",names(subsetData))]
+cor.elispots <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.elispots.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+ggcorrplot::ggcorrplot(corr = cor.elispots, p.mat = cor.elispots.pmat, title = "Fold-change responses - Naive", legend.title = "Kendall tau", insig = "blank", tl.cex = 20)
+# ggsave(filename = "./Images/Fold-changes_ggcorrplot_Naive.pdf")
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose")
+subsetData <- subsetData[,grep("^FCActiv",names(subsetData))]
+cor.elispots <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.elispots.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+ggcorrplot::ggcorrplot(corr = cor.elispots, p.mat = cor.elispots.pmat, title = "Fold-change responses - Experienced", legend.title = "Kendall tau", insig = "blank", tl.cex = 20)
+# ggsave(filename = "./Images/Fold-changes_ggcorrplot_Experienced.pdf")
+
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T) + 
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+# ggsave(filename = "./Images/ActivCD4_correl_Age_Vax1.pdf", width=8)
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T) + 
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+# ggsave(filename = "./Images/ActivCD4_correl_Age_Vax2.pdf", width=8)
+
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T) + 
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+# ggsave(filename = "./Images/FCActivCD8_correl_Age_Vax1.pdf", width=8)
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
+           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T) + 
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+# ggsave(filename = "./Images/FCActivCD8_correl_Age_Vax2.pdf", width=8)
+
+
+
+#''  ------------------------------------ Age correlations with activated CD4 responses ------------------------------------------
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose")
+subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]  #  "^FCActivCD4",
+cor.matrix <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.matrix.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+cor.matrix <- as.data.frame(cor.matrix); cor.matrix$Labels <- row.names(cor.matrix); cor.matrix$Prior.COVID <- "No"
+cor.matrix <- merge( x = cor.matrix, y = cor.matrix.pmat[,"Age"], by = "row.names"); names(cor.matrix)[grep("y",names(cor.matrix))] <- "Pvalue"
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose")
+subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]  #"^FCActivCD4",
+cor.matrix2 <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.matrix2.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+cor.matrix2 <- as.data.frame(cor.matrix2); cor.matrix2$Labels <- row.names(cor.matrix2); cor.matrix2$Prior.COVID <- "Yes"
+cor.matrix2 <- merge( x = cor.matrix2, y = cor.matrix2.pmat[,"Age"], by = "row.names"); names(cor.matrix2)[grep("y",names(cor.matrix2))] <- "Pvalue"
+
+temp <- as.data.frame(rbind(cor.matrix, cor.matrix2)); temp <- temp[ -grep( paste( c("Age", "Foxp3", "CD8", "Gzm"), collapse = "|"), temp$Row.names),]
+# 
+# ggplot( data = temp, aes(y = Labels,x = Age, fill = Prior.COVID)) + geom_bar(stat='identity',position = 'dodge',width=0.75) + theme_bw() + 
+#   scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + xlab("Correlation with Age") + ylab(" ") + theme(axis.text.y = element_text(angle=0, size = 10)) + 
+#   ggtitle("Post 1st dose") + geom_vline(xintercept=0, linetype = "dashed") + scale_x_continuous(limits = c(-1,1))
+#   
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose")
+subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]
+cor.matrix <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.matrix.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+cor.matrix <- as.data.frame(cor.matrix); cor.matrix$Labels <- row.names(cor.matrix); cor.matrix$Prior.COVID <- "No"
+cor.matrix <- merge( x = cor.matrix, y = cor.matrix.pmat[,"Age"], by = "row.names"); names(cor.matrix)[grep("y",names(cor.matrix))] <- "Pvalue"
+
+subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose")
+subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]
+cor.matrix2 <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
+cor.matrix2.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
+cor.matrix2 <- as.data.frame(cor.matrix2); cor.matrix2$Labels <- row.names(cor.matrix2); cor.matrix2$Prior.COVID <- "Yes"
+cor.matrix2 <- merge( x = cor.matrix2, y = cor.matrix2.pmat[,"Age"], by = "row.names"); names(cor.matrix2)[grep("y",names(cor.matrix2))] <- "Pvalue"
+
+
+temp2 <- as.data.frame(rbind(cor.matrix, cor.matrix2)); temp2 <- temp2[ -grep( paste( c("Age", "Foxp3"), collapse = "|"), temp2$Row.names),]
+
+
+temp[ grep("CD4_.CD38.Ki67._FreqParent", temp$Row.names), "Labels"] <- "Frequency\npost 1st dose"
+temp2[ grep("CD4_.CD38.Ki67._FreqParent", temp2$Row.names), "Labels"] <- "Frequency\npost 2nd dose"
+temp[ grep("FCActivCD4_Vax1",temp$Row.names), "Labels"]  <- "Fold-change\npost 1st dose"
+temp[ grep("FCActivCD4_Vax2",temp$Row.names), "Labels"]  <- "Fold-change\npost 2nd dose"
+temp <- temp[,c("Row.names","Age","Labels","Prior.COVID","Pvalue")];  temp2 <- temp2[,c("Row.names", "Age","Labels","Prior.COVID","Pvalue")]  
+temp <- as.data.frame(rbind(temp, temp2))
+temp$Labels <- factor(temp$Labels, levels = c("Fold-change\npost 2nd dose", "Fold-change\npost 1st dose","Frequency\npost 2nd dose",   "Frequency\npost 1st dose"))
+# temp <- temp[c(1:6,8,7),]   # rearrange last two rows;  needed if FC lines are included in the df
+ggplot( data = temp, aes(x = Labels,y = Age, fill = Prior.COVID)) + geom_bar(stat='identity',position = position_dodge(width=0.5), width=0.05, color="black", size=0.1) + 
+  geom_point(aes(fill=Prior.COVID, size=Pvalue), pch=21, color="black", stroke=0.2, position = position_dodge(width=0.5)) + 
+  theme_bw() + scale_size(range = c(10,1), breaks = c(0,0.05,0.1,0.2,0.7), limits = c(0,0.8), trans = 'pseudo_log') + guides(size = guide_legend(reverse=TRUE)) + 
+  scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + ylab("Kendall's tau vs Age") + xlab(" ") + ggtitle("CD4+Ki67+CD38+") + geom_hline(yintercept=0, linetype = "dashed") +
+  theme(axis.text.y = element_text(size = 16, color="black"), plot.title = element_text(size=24), axis.text.x = element_text(size=16, color="black", angle=45, hjust=1,vjust=1), 
+        axis.title.x = element_text(size=16, color="black")) + 
+  coord_flip() + scale_y_continuous(limits = c(-1,0.5), breaks = seq(-1,1,0.25))
+# ggsave(filename = "./Images/Age_CD4correlations_lollipop.pdf", width=5, height = 5)
+
+
+
+
+
 #' ------------------ CXCL13 analyses --------------------------
 #'
 
@@ -509,12 +662,16 @@ twoSampleBar(data = subset(mergedData, timeCategory == "Post 2nd dose"), xData =
 
 #' ------------------ Avidity analyses --------------------------
 #'
-
-linePlot(data = mergedData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Alias', xLabel = ' ', yLabel = "IgG avidity (%)", 
+subsetData <- subset(mergedData,  timeCategory != "two Weeks" & timeCategory != "2 wks post 2nd dose");   
+subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose","One month post\n2nd dose"))
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Alias', xLabel = ' ', yLabel = "IgG avidity (%)", 
          title = "anti-S1 Avidity", colorby = "Prior.COVID.infection.") + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("#FFDFB1","#B5B2F1")) + scale_y_continuous(limits = c(0,110),breaks=seq(0,140,10))
 # ggsave(filename = "./Images/avidity_lineplot.pdf")
 
+
+fit <- aov(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
+fit <- aov(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')); tukey_hsd(fit); formatC(tukey_hsd(fit)$p.adj, format="e")
 
 
 #' ------------------ Tfh analyses --------------------------
@@ -815,6 +972,8 @@ fit <- aov(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior
 
 
 
+
+
 #' ------------------ Correlational analyses --------------------------
 #' 
 index <- grep(paste(c("^Prior","DPO.covid","DPV","timeCategory", "FreqParent$", "^FC"), collapse = "|"), names(mergedData), value=F)
@@ -835,166 +994,22 @@ ggplot(data = subset(mergedData, timeCategory == "Post 1st dose"), aes(x = Elisp
 
 
 
+#'  ------------------------------------ Age correlations with Tfh responses ------------------------------------------
+#'  
 
 
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "FCActivCD4_Vax1", yData = "FCActivCD8_Vax1", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
-  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax1.pdf", width=8)
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "FCActivCD4_Vax2", yData = "FCActivCD8_Vax2", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
-  scale_y_continuous(trans='pseudo_log', limits = c(0,200), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
-
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose")
-subsetData <- subsetData[,grep("^FCActiv",names(subsetData))]
-cor.elispots <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.elispots.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-ggcorrplot::ggcorrplot(corr = cor.elispots, p.mat = cor.elispots.pmat, title = "Fold-change responses - Naive", legend.title = "Kendall tau", insig = "blank", tl.cex = 20)
-# ggsave(filename = "./Images/Fold-changes_ggcorrplot_Naive.pdf")
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose")
-subsetData <- subsetData[,grep("^FCActiv",names(subsetData))]
-cor.elispots <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.elispots.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-ggcorrplot::ggcorrplot(corr = cor.elispots, p.mat = cor.elispots.pmat, title = "Fold-change responses - Experienced", legend.title = "Kendall tau", insig = "blank", tl.cex = 20)
-# ggsave(filename = "./Images/Fold-changes_ggcorrplot_Experienced.pdf")
-
-
-
-
+subsetData <- subset(mergedData, timeCategory == "Post 1st dose")
+subsetData <- subsetData[,grep( paste(c("^FC"), collapse = "|"), names(subsetData))]
+cor.matrix <- round(cor(subsetData, method="kendall",use="pairwise.complete.obs"), 2)
 
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" ), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose"), name2 = "Experienced", 
-           xData = "FCActivCD4_Vax1", yData = "FCtfh_Vax1", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) + 
-  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
-  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), limits = c(0,20), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename = "./Images/FCTfh_correl_FCactivCD4_Vax1.pdf", width=8)
-
-
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose"), name2 = "Experienced", 
-           xData = "FCActivCD4_Vax2", yData = "FCtfh_Vax2", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
+           xData = "FC_IgG_S1_postVax1", yData = "FCtfh_CXCR3_Vax1", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
            xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) + 
   scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename = "./Images/FCTfh_correl_FCactivCD4_Vax2.pdf", width=8)
 
 
-
-
-
-
-
-
-
-
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
-
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
-
-
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
-
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
-# ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
-
-
-
-#'  ------------------------------------ Age correlations with activated CD4 responses ------------------------------------------
-#'  
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose")
-subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","^FCActivCD4","Age" ), collapse = "|"), names(subsetData))]
-cor.matrix <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.matrix.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-cor.matrix <- as.data.frame(cor.matrix); cor.matrix$Labels <- row.names(cor.matrix); cor.matrix$Prior.COVID <- "No"
-cor.matrix <- merge( x = cor.matrix, y = cor.matrix.pmat[,"Age"], by = "row.names"); names(cor.matrix)[grep("y",names(cor.matrix))] <- "Pvalue"
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose")
-subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","^FCActivCD4","Age" ), collapse = "|"), names(subsetData))]
-cor.matrix2 <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.matrix2.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-cor.matrix2 <- as.data.frame(cor.matrix2); cor.matrix2$Labels <- row.names(cor.matrix2); cor.matrix2$Prior.COVID <- "Yes"
-cor.matrix2 <- merge( x = cor.matrix2, y = cor.matrix2.pmat[,"Age"], by = "row.names"); names(cor.matrix2)[grep("y",names(cor.matrix2))] <- "Pvalue"
-
-temp <- as.data.frame(rbind(cor.matrix, cor.matrix2)); temp <- temp[ -grep( paste( c("Age", "Foxp3", "CD8", "Gzm"), collapse = "|"), temp$Row.names),]
-# 
-# ggplot( data = temp, aes(y = Labels,x = Age, fill = Prior.COVID)) + geom_bar(stat='identity',position = 'dodge',width=0.75) + theme_bw() + 
-#   scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + xlab("Correlation with Age") + ylab(" ") + theme(axis.text.y = element_text(angle=0, size = 10)) + 
-#   ggtitle("Post 1st dose") + geom_vline(xintercept=0, linetype = "dashed") + scale_x_continuous(limits = c(-1,1))
-#   
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose")
-subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]
-cor.matrix <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.matrix.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-cor.matrix <- as.data.frame(cor.matrix); cor.matrix$Labels <- row.names(cor.matrix); cor.matrix$Prior.COVID <- "No"
-cor.matrix <- merge( x = cor.matrix, y = cor.matrix.pmat[,"Age"], by = "row.names"); names(cor.matrix)[grep("y",names(cor.matrix))] <- "Pvalue"
-
-subsetData <- subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose")
-subsetData <- subsetData[,grep( paste(c("CD4_.CD38.Ki67._FreqParent","Age" ), collapse = "|"), names(subsetData))]
-cor.matrix2 <- cor(subsetData, method="kendall" , use="pairwise.complete.obs" )
-cor.matrix2.pmat <- ggcorrplot::cor_pmat(subsetData, method="kendall", use="pairwise.complete.obs"  )
-cor.matrix2 <- as.data.frame(cor.matrix2); cor.matrix2$Labels <- row.names(cor.matrix2); cor.matrix2$Prior.COVID <- "Yes"
-cor.matrix2 <- merge( x = cor.matrix2, y = cor.matrix2.pmat[,"Age"], by = "row.names"); names(cor.matrix2)[grep("y",names(cor.matrix2))] <- "Pvalue"
-
-
-temp2 <- as.data.frame(rbind(cor.matrix, cor.matrix2)); temp2 <- temp2[ -grep( paste( c("Age", "Foxp3"), collapse = "|"), temp2$Row.names),]
-# 
-# ggplot( data = temp2, aes(y = Labels,x = Age, fill = Prior.COVID)) + geom_bar(stat='identity',position = 'dodge',width=0.75) + theme_bw() + 
-#   scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + xlab("Correlation with Age") + ylab(" ") + theme(axis.text.y = element_text(angle=0, size = 10)) + 
-#   ggtitle("Post 2nd dose") + geom_vline(xintercept=0, linetype = "dashed") +  scale_x_continuous(limits = c(-1,1))
-
-# temp <- x; temp2 <- y
-temp[ grep("CD4_.CD38.Ki67._FreqParent", temp$Row.names), "Labels"] <- "Frequency\npost 1st dose"
-temp2[ grep("CD4_.CD38.Ki67._FreqParent", temp2$Row.names), "Labels"] <- "Frequency\npost 2nd dose"
-temp[ grep("FCActivCD4_Vax1",temp$Row.names), "Labels"]  <- "Fold-change\npost 1st dose"
-temp[ grep("FCActivCD4_Vax2",temp$Row.names), "Labels"]  <- "Fold-change\npost 2nd dose"
-temp <- temp[,c("Row.names","Age","Labels","Prior.COVID","Pvalue")];  temp2 <- temp2[,c("Row.names", "Age","Labels","Prior.COVID","Pvalue")]  
-temp <- as.data.frame(rbind(temp, temp2))
-temp$Labels <- factor(temp$Labels, levels = c("Fold-change\npost 2nd dose", "Fold-change\npost 1st dose","Frequency\npost 2nd dose",   "Frequency\npost 1st dose"))
-temp <- temp[c(1:6,8,7),]
-ggplot( data = temp, aes(x = Labels,y = Age, fill = Prior.COVID)) + geom_bar(stat='identity',position = position_dodge(width=0.5), width=0.05, color="black", size=0.1) + 
-  geom_point(aes(fill=Prior.COVID, size=Pvalue), pch=21, color="black", stroke=0.2, position = position_dodge(width=0.5)) + 
-  theme_bw() + scale_size(range = c(8,1), breaks = c(0,0.05,0.1,0.2,0.7), limits = c(0,0.8), trans = 'pseudo_log') + guides(size = guide_legend(reverse=TRUE)) + 
-  scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) + ylab("Kendall's tau vs Age") + xlab(" ") + ggtitle("CD4+Ki67+CD38+") + geom_hline(yintercept=0, linetype = "dashed") +
-  theme(axis.text.y = element_text(size = 16, color="black"), plot.title = element_text(size=24), axis.text.x = element_text(size=16, color="black", angle=45, hjust=1,vjust=1), 
-        axis.title.x = element_text(size=16, color="black")) + 
-  coord_flip() + scale_y_continuous(limits = c(-1,0.5), breaks = seq(-1,1,0.25))
-# ggsave(filename = "./Images/Age_CD4correlations_lollipop.pdf", width=5, height = 5)
-
-
-
-#'  ------------------------------------ Age correlations with Tfh responses ------------------------------------------
-#'  
 
 subsetData <- subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose")
 subsetData <- subsetData[,grep( paste(c("CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent","^FCtfh","Age" ), collapse = "|"), names(subsetData))]
@@ -1055,6 +1070,25 @@ ggplot( data = temp, aes(x = Labels,y = Age, fill = Prior.COVID)) + geom_bar(sta
         axis.title.x = element_text(size=16, color="black")) + 
   coord_flip() + scale_y_continuous(limits = c(-1,0.5), breaks = seq(-1,1,0.25))
 # ggsave(filename = "./Images/Age_Tfhcorrelations_lollipop.pdf", width=5, height = 5)
+
+
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" ), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose"), name2 = "Experienced", 
+           xData = "FCActivCD4_Vax1", yData = "FCtfh_Vax1", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 1", 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) + 
+  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
+  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), limits = c(0,20), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+# ggsave(filename = "./Images/FCTfh_correl_FCactivCD4_Vax1.pdf", width=8)
+
+
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose"), name1 = "Naive", 
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose"), name2 = "Experienced", 
+           xData = "FCActivCD4_Vax2", yData = "FCtfh_Vax2", fillParam = "Prior.COVID.infection.", title = "Vaccine dose 2", 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) + 
+  scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
+  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+# ggsave(filename = "./Images/FCTfh_correl_FCactivCD4_Vax2.pdf", width=8)
 
 
 

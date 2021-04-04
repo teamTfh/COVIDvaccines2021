@@ -304,12 +304,12 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     subsetData.median <- subsetData %>% group_by_('timeCategory', fillParam ) %>% summarize(median = median(.data[[yData]], na.rm=T))
     if(length(levels(as.factor(data[,fillParam])))>1)
     {  
-      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
-          geom_path(aes_string(group=groupby, color=fillParam), alpha=0.3) + 
-          geom_point(size = 2, pch=21, color="black", alpha=0.1) + facet_wrap(fillParam ) +   # , scales='free'
-          scale_color_manual(values=c("#FFDFB1", "#B5B2F1")) + 
-          scale_fill_manual(values=c("#FFDFB1", "#B5B2F1")) +  
+          geom_path(aes_string(group=groupby, color=fillParam), alpha=0.4) + 
+          geom_point(size = 2, pch=21, color="black", alpha=0.2) + facet_wrap(fillParam ) +   # , scales='free'
+          scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+          scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) +  
           geom_line(data = subsetData.median, aes_string(x = 'timeCategory', y='median', group='1', color=fillParam), alpha=1,size=2) +
           geom_point(data = subsetData.median, aes_string(x = 'timeCategory', y='median'), alpha=1,size=2) +
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
