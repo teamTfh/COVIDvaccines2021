@@ -213,7 +213,7 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
   }
 }
 
-prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform = F, pathOff = F)
+prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform = F, pathOff = F, recentCOVID = F)
 {
   data[,fillParam] <- factor(data[,fillParam])
   # print(levels(data[,fillParam]))
@@ -295,7 +295,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     }
   }
   
-  if(repMeasures==F && length(levels(data[,fillParam]))==2  && exponential==F && newform == T)         # not repeated measures, two cohorts, normal scale, new format
+  if(repMeasures==F && length(levels(data[,fillParam]))==2  && exponential==F && newform == T && recentCOVID==F)         # not repeated measures, two cohorts, normal scale, new format
   {
     print("block3")
     targets <- which(table(data$Record.ID) > 0)       
@@ -319,10 +319,37 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       )
     }
   }
+
   
+  if(repMeasures==F && length(levels(data[,fillParam]))==2  && exponential==F && newform == T && recentCOVID==T)     # not repeated measures, two cohorts, normal scale, new format, RECENT COVID vs OLD COVID
+  {
+    print("block3.1 recentCOVID")
+    targets <- which(table(data$Record.ID) > 0)       
+    subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]
+    subsetData <- subsetData[order(subsetData$Record.ID, subsetData$shortForm, decreasing = F),]
+    subsetData.median <- subsetData %>% group_by_('timeCategory', fillParam ) %>% summarize(median = median(.data[[yData]], na.rm=T))
+    if(length(levels(as.factor(data[,fillParam])))>1)
+    {  
+      return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
+        ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
+          geom_path(aes_string(group=groupby, color=fillParam), alpha=0.4) + 
+          geom_point(size = 2, pch=21, color="black", alpha=0.2) + 
+          facet_wrap(fillParam ) +   # , scales='free'
+          scale_color_manual(values=c("grey70", "grey70")) + 
+          scale_fill_manual(values=c("grey70", "grey70")) +  
+          geom_path(data = subset(subsetData, DPO.covid %in% -30:0), aes_string(group=groupby), color="#B5B2F1", alpha=0.7, size=2) + 
+          ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
+          theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
+                plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
+                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) 
+      )
+    }
+  }
+    
   ##  ----------------------------------------------------------------------------------------------------------------
   if(repMeasures==T && length(levels(data[,fillParam]))==1 && exponential==T)          #  repeated measures, one cohort, exponential scale
   {
+    print("block4")
     targets <- which(table(data$Record.ID) > 1)         # show only the repeated measures values
     subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]; subsetData[,xData] <- factor(subsetData[,xData])
     justforttest <- subsetData[, c(xData,yData)]
@@ -524,17 +551,35 @@ prePostTimeAveraged <- function(data, title, xLabel, yLabel)
 }
 
 
-linePlot <- function(data, xData, yData, groupby, colorby, title, xLabel, yLabel)
+linePlot <- function(data, xData, yData, groupby, colorby, title, xLabel, yLabel, recentCOVID = F)
 {
   subsetData.fxn <- subset(data, !is.na(data[,yData]));  #subsetData$subsetData[order(subsetData$Label)]
-  return(
-    ggplot(subsetData.fxn, aes_string(x=xData, y=yData, group=groupby)) + 
-    geom_point(size=2,alpha=0.5) + geom_line(aes_string(group=groupby, color=colorby), size=1, alpha=0.75) +  
-    xlab(xLabel) + ylab(yLabel) + theme_bw() + 
-    ggtitle(title) + #scale_x_discrete(labels= c("Baseline","1 week","2 weeks","3 weeks","4 weeks")) + 
-    theme(axis.text = element_text(color="black",size=18), axis.title = element_text(size=24), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
-          plot.title=element_text(size=28) )
-  )
+  if (recentCOVID == F)
+  {
+    return(
+      ggplot(subsetData.fxn, aes_string(x=xData, y=yData, group=groupby)) + 
+      geom_point(size=2,alpha=0.5) + geom_line(aes_string(group=groupby, color=colorby), size=1, alpha=0.75) +  
+      xlab(xLabel) + ylab(yLabel) + theme_bw() + 
+      scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + 
+      ggtitle(title) + 
+      theme(axis.text = element_text(color="black",size=18), axis.title = element_text(size=24), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
+            plot.title=element_text(size=28) )
+    )
+  }
+  if (recentCOVID == T)
+  {
+    return(
+      ggplot(subsetData.fxn, aes_string(x=xData, y=yData, group=groupby)) + 
+        geom_point(size=2,alpha=0.5) + 
+        geom_line(aes_string(group=groupby, color=colorby), size=0.5, alpha=0.75) +  
+        xlab(xLabel) + ylab(yLabel) + theme_bw() + 
+        scale_color_manual(name="Prior COVID?",values = c("grey70","grey70")) + 
+        geom_line(data = subset(subsetData.fxn, DPO.covid %in% -30:0), aes_string(group=groupby), color="#B5B2F1", alpha=0.7, size=2) + 
+        ggtitle(title) + 
+        theme(axis.text = element_text(color="black",size=18), axis.title = element_text(size=24), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
+              plot.title=element_text(size=28) )
+    )
+  }
   
 }
 

@@ -134,12 +134,12 @@ avidity <- read.csv("../Data/avidity.csv")
 
 flowData.freq <- read.csv(file="../Data/ByParent.csv")                                 # flow cytometry ByParent spreadsheet
 flowData.freq <- flowData.freq[-grep(paste(c("Mean","SD"),collapse = "|"), flowData.freq$X, value=F), ]         # delete the Mean and SD rows
+flowData.freq[,1] <- NULL                           # delete the first column and only retain the SampleID column
 names(flowData.freq)[1] <- "fcsFile"                # simple name
 
 flowDataPHIbL.freq <- read.csv(file="../Data/ByParent_PHI Baselines.csv")                                 # flow cytometry ByParent_PHI Baselines spreadsheet
 flowDataPHIbL.freq <- flowDataPHIbL.freq[-grep(paste(c("Mean","SD"),collapse = "|"), flowDataPHIbL.freq$X, value=F), ]         # delete the Mean and SD rows
 names(flowDataPHIbL.freq)[1] <- "fcsFile"                # simple name
-
 flowDataPHIbL.freq <- flowDataPHIbL.freq[-which(flowDataPHIbL.freq$fcsFile == "CV-015_PHI-048_bL_CPT.fcs"),]           # exclude CV-015_PHI-048_bL -- will use oD as baseline
 
 flowData.freq <- rbind(flowData.freq, flowDataPHIbL.freq) #merging ByParent and ByParent_PHIbaselines 
@@ -336,6 +336,14 @@ FC_response2$FC_Elispot_IgG_S1 <- FC_response2$`Post 2nd dose`/FC_response2$`Pos
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FC_Elispot_IgG_S1")
 
+subsetData <- subset(mergedData, timeCategory == "One month post\n2nd dose" | timeCategory == "Baseline")
+FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("binding_IgG_S1")) 
+FC_response2$FC_IgG_S1_fullStudy <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
+FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
+saveNames <- c(saveNames, "FC_IgG_S1_fullStudy")
+
+
+
 # subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
 # FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("Elispot_IgG_S1")) 
 # FC_response2$FC_Elispot_IgG_S1 <- FC_response2$`Post 2nd dose`/FC_response2$`Post 1st dose`; FC_response2$Cohort <- NULL
@@ -356,15 +364,15 @@ FC_response2$FC_Btet_IgG <- FC_response2$`Post 2nd dose`/FC_response2$`Baseline`
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FC_Btet_IgG")
 
-subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
+subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "One month post\n2nd dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("AIM_CD4.CD69.CD200._FreqParent")) 
-FC_response2$FC_AIMCD4_69200 <- FC_response2$`Post 2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
+FC_response2$FC_AIMCD4_69200 <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FC_AIMCD4_69200")
 
-subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
+subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "One month post\n2nd dose")
 FC_response2 <- dcast( subsetData, `Record.ID`+`Alias`~`timeCategory`, value.var = c("AIM_CD8.CD137.IFNg._FreqParent")) 
-FC_response2$FC_AIMCD8_137IFNg <- FC_response2$`Post 2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
+FC_response2$FC_AIMCD8_137IFNg <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response <- merge(x=FC_response, y=FC_response2, all = T, by = c("Record.ID","Alias"))
 saveNames <- c(saveNames, "FC_AIMCD8_137IFNg")
 
