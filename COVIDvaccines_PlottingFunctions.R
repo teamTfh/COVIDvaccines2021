@@ -192,7 +192,7 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
         scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
-        theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
+        theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=36,hjust = 0.5)) + 
         annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
         theme(legend.position = "none")     )
   }
@@ -270,7 +270,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
-          geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
+          geom_point(size = 6, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
           scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
           scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -284,7 +284,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
       return(          # colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
         ggplot(data=subsetData, aes_string(x=xData, y=yData, fill=fillParam) ) + theme_bw() + 
           # geom_path(aes_string(group=groupby), color="grey70", alpha=0.95) + 
-          geom_point(size = 5, pch=21, color="black", alpha=0.4) + facet_wrap(fillParam ) +   # , scales='free'
+          geom_point(size = 7, pch=21, color="black", alpha=0.5) + facet_wrap(fillParam ) +   # , scales='free'
           scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
           scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) + 
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
@@ -315,7 +315,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
-                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) 
+                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white"), panel.spacing = unit(1, "lines")) 
       )
     }
   }
@@ -341,7 +341,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
           ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
           theme(axis.text = element_text(size=18,hjust = 0.5, color="black"), axis.title = element_text(size=22,hjust = 0.5), 
                 plot.title = element_text(size=36,hjust = 0.5), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
-                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) 
+                legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white"), panel.spacing = unit(1, "lines")) 
       )
     }
   }
