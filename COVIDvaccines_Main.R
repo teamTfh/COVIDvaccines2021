@@ -1062,6 +1062,12 @@ twoSampleBar(data = subset(mergedData, timeCategory == "Post 2nd dose"), xData =
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ ggrepel::geom_text_repel(aes(label = Label))
 # ggsave(filename = "./Images/BindingAb_S1_IgG_post2ndDose.pdf", width=5)
 
+twoSampleBar(data = subset(mergedData, timeCategory == "One month post\n2nd dose"), xData = "Prior.COVID.infection.", yData = "binding_IgG_S1", fillParam = "Prior.COVID.infection.", 
+             title = "One month post", yLabel = "anti-S1 IgG titer", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e7),) + 
+  scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ ggrepel::geom_text_repel(aes(label = Label))
+# ggsave(filename = "./Images/BindingAb_S1_IgG_oneMonth.pdf", width=5)
+
+
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] 
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose")) 
 linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgA_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgA titer", 
@@ -1133,7 +1139,7 @@ linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_N', gro
 # ggsave(filename = "./Images/BindingAb_N_IgG_linePlot.pdf", width=7)
 
 
-linePlot(data = mergedData, xData = 'DPV', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = 'Days after first vaccine dose', yLabel = "anti-S1 IgG titer", 
+linePlot(data = mergedData, xData = 'DPV', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = 'Days relative to first dose', yLabel = "anti-S1 IgG titer", 
          title = "anti-S1 IgG titer", colorby = "Prior.COVID.infection.") + 
   # scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e7), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))# + ggrepel::geom_text_repel(aes(label = Label))
@@ -1153,15 +1159,20 @@ subsetData %>% levene_test( binding_IgG_S1 ~ Prior.COVID.infection.)
 subsetData %>% shapiro_test( binding_IgG_S1)
 subsetData %>%  wilcox_test(binding_IgG_S1 ~ Prior.COVID.infection.)
 subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(binding_IgG_S1)
-subsetData %>% levene_test( IC50_neutAb_log10 ~ Prior.COVID.infection.)
-subsetData %>% shapiro_test( IC50_neutAb_log10)
-subsetData %>%  wilcox_test(IC50_neutAb_log10 ~ Prior.COVID.infection.)
 
-subsetData <- subset(mergedData, timeCategory == 'Post 1st dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
-subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(IC50_neutAb_log10)
-subsetData %>% levene_test( IC50_neutAb_log10 ~ Prior.COVID.infection.)
-subsetData %>% shapiro_test( IC50_neutAb_log10)
-subsetData %>%  wilcox_test(IC50_neutAb_log10 ~ Prior.COVID.infection.)
+
+
+
+subsetData <- subset(mergedData, timeCategory == 'Post 2nd dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
+subsetData %>% levene_test( binding_IgG_S1 ~ Prior.COVID.infection.)
+subsetData %>% shapiro_test( binding_IgG_S1)
+subsetData %>%  wilcox_test(binding_IgG_S1 ~ Prior.COVID.infection.)
+
+subsetData <- subset(mergedData, timeCategory == 'One month post\n2nd dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
+subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(binding_IgG_S1)
+subsetData %>% levene_test( binding_IgG_S1 ~ Prior.COVID.infection.)
+subsetData %>% shapiro_test( binding_IgG_S1)
+subsetData %>%  wilcox_test(binding_IgG_S1 ~ Prior.COVID.infection.)
 
 
 subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(FC_IgG_S1_postVax1)
@@ -1172,15 +1183,25 @@ subsetData %>% shapiro_test(FC_IgG_S1_postVax2)
 subsetData %>%  wilcox_test(FC_IgG_S1_postVax2 ~ Prior.COVID.infection.)
 
 
-subsetData <- subset(mergedData, timeCategory == 'Post 2nd dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
-subsetData %>% levene_test( binding_IgG_S1 ~ Prior.COVID.infection.)
-subsetData %>% shapiro_test( binding_IgG_S1)
-subsetData %>%  wilcox_test(binding_IgG_S1 ~ Prior.COVID.infection.)
 
-subsetData <- subset(mergedData, timeCategory == 'One month post\n2nd dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
-subsetData %>% levene_test( binding_IgG_S1 ~ Prior.COVID.infection.)
-subsetData %>% shapiro_test( binding_IgG_S1)
-subsetData %>%  wilcox_test(binding_IgG_S1 ~ Prior.COVID.infection.)
+subsetData <- subset(mergedData, timeCategory == 'Baseline'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
+subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(IC50_neutAb_log10)
+subsetData %>% levene_test( IC50_neutAb_log10 ~ Prior.COVID.infection.)
+subsetData %>% shapiro_test( IC50_neutAb_log10)
+subsetData %>%  wilcox_test(IC50_neutAb_log10 ~ Prior.COVID.infection.)
+
+subsetData <- subset(mergedData, timeCategory == 'Post 1st dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
+subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(IC50_neutAb_log10)
+subsetData %>% levene_test( IC50_neutAb_log10 ~ Prior.COVID.infection.)
+subsetData %>% shapiro_test( IC50_neutAb_log10)
+subsetData %>%  wilcox_test(IC50_neutAb_log10 ~ Prior.COVID.infection.)
+
+subsetData <- subset(mergedData, timeCategory == 'Post 2nd dose'); subsetData <- subsetData[which(!is.na(subsetData$binding_IgG_S1)),]
+subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(IC50_neutAb_log10)
+subsetData %>% levene_test( IC50_neutAb_log10 ~ Prior.COVID.infection.)
+subsetData %>% shapiro_test( IC50_neutAb_log10)
+subsetData %>%  wilcox_test(IC50_neutAb_log10 ~ Prior.COVID.infection.)
+
 
 
 subsetData <- mergedData[which(!is.na(mergedData$FC_Elispot_IgG_S1)),]
