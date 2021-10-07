@@ -59,6 +59,7 @@ ggplot(data = temp, aes(x = DPV, y = Record.ID, group = Record.ID)) + geom_vline
 
 #' -----------------------  FINAL DATA OBJECT  --------------------------------
 
+mergedData <- mergedData[, -which(names(mergedData) == "Alias")]
 # saveRDS(mergedData, file = "mergedData_postExclusions.Rds")
 mergedData <- readRDS(file = "mergedData_postExclusions.Rds")
 
@@ -92,7 +93,7 @@ bartlett.test(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData,
 kruskal_test(formula = CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) 
 dunn_test(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
+dunn_test(CD4_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "CD4_.CD38.Ki67._FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig1H.csv")
@@ -105,7 +106,6 @@ prePostTime(data = subsetData, xData = "timeCategory", yData="CD4_.CD38.Ki67._Fr
 ##' *************** activated CD8 ********************
 prePostTime(data = subsetData, xData = "timeCategory", yData="CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "Activated CD8", 
             xLabel = " ", yLabel = "Ki67+CD38+ (% CD8)", repMeasures = F, exponential=F, newform = T)  + scale_y_continuous(breaks=seq(0,10,1), limits = c(0,5.5)) # +
-# ggrepel::geom_text_repel(data = subset(mergedData, Alias =="PHI-071"), aes(label = Label))
 # ggsave(filename = "./Images/ActivCD8_bothCohorts_overTime.pdf")
 
 bartlett.test(CD8_.CD38.Ki67._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
@@ -137,8 +137,8 @@ prePostTime(data = subsetData, xData = "timeCategory", yData="CD8_.CD38.Ki67..Gz
 
 bartlett.test(CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')))
-tukey_hsd( aov(CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')))
+dunn_test(CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
+dunn_test( CD8_.CD38.Ki67..GzmB..CD8_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "CD8_.CD38.Ki67..GzmB..CD8_FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs1H.csv")
@@ -295,12 +295,11 @@ subsetData <- subset(mergedData,  timeCategory != "two Weeks"& timeCategory != "
 
 prePostTime(subsetData, xData = "timeCategory", yData="AIM_CD4.CD69.CD200._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", title = "CD69+CD200+ CD4", 
             xLabel = " ", yLabel = "CD69+CD200+ (% CD4)", repMeasures = F, exponential=F, newform = T)  + scale_y_continuous(trans="log10", limits = c(0.002, 0.8)) #+ 
-# ggrepel::geom_label_repel(data = subset(subsetData, Alias == "HV-068"), aes(label=Record.ID))
 # ggsave(filename = "./Images/AIM_CD4_CD69CD200_overTime.pdf")
 bartlett.test(AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subsetData)
 kruskal_test(formula = AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 dunn_test(formula = AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
-tukey_hsd(aov(AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')))
+dunn_test(AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "AIM_CD4.CD69.CD200._FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig2D.csv")
@@ -308,7 +307,7 @@ tukey_hsd(aov(AIM_CD4.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetD
 
 
 subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "One month post\n2nd dose")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD4.CD69.CD200._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID`+ `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD4.CD69.CD200._FreqParent")) 
 FC_response2$FoldChange <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response2 <- FC_response2[!is.infinite(FC_response2$FoldChange), ]
 FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "common") 
@@ -353,7 +352,7 @@ dunn_test(formula = AIM_CD8.CD137.IFNg._FreqParent ~ timeCategory, data=subset(s
 
 
 subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "One month post\n2nd dose")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD8.CD137.IFNg._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD8.CD137.IFNg._FreqParent")) 
 FC_response2$FoldChange <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response2 <- FC_response2[!is.infinite(FC_response2$FoldChange), ]
 FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "common") 
@@ -436,7 +435,7 @@ dunn_test(formula = AIM_CD8.IFNg._FreqParent ~ timeCategory, data=subset(subsetD
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs2B.csv")
 
 subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "One month post\n2nd dose")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD8.IFNg._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD8.IFNg._FreqParent")) 
 FC_response2$FC_AIMCD8_IFNg <- FC_response2$`One month post\n2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "common") 
 
@@ -464,9 +463,9 @@ prePostTime(subsetData, xData = "timeCategory", yData="CD4_.Nonnaive.cTfh.ICOS..
             xLabel = " ", yLabel = "ICOS+CD38+ (% cTfh)", repMeasures = F, newform=T)  
 # ggsave(filename = "./Images/cTfh_responses_bothCohorts_overTime.pdf")
 bartlett.test(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
-tukey_hsd(aov(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')))
+dunn_test(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
+dunn_test(CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig3B.csv")
@@ -484,9 +483,9 @@ prePostTime(data = subsetData, xData = "timeCategory", yData="CD4_.Nonnaive.cTfh
             xLabel = " ", yLabel = "CXCR3+ (% ICOS+CD38+ cTfh)", repMeasures = F, newform =  T)  + scale_y_continuous(limits = c(0,80),breaks=seq(0,100,10)) 
 # ggsave(filename = "./Images/cTfh_responses_CXCR3_bothCohorts_overTime.pdf")
 bartlett.test(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
-tukey_hsd(aov(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')))
+dunn_test(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
+# tukey_hsd( aov(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
 kruskal_test(formula = CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 dunn_test(CD4_.Nonnaive.cTfh.ICOS..CD38...CXCR3._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
@@ -536,14 +535,14 @@ kruskal_test(formula = AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCa
 dunn_test(AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 kruskal_test(formula = AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
-tukey_hsd( aov(AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
+dunn_test(AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig3F.csv")
 
 
 subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("AIM_CD4.CXCR5.PD1..CD38hi.CD69.CD200._FreqParent")) 
 FC_response2$FoldChange <- FC_response2$`Post 2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response2 <- FC_response2[!is.infinite(FC_response2$FoldChange), ]
 FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "common") 
@@ -704,14 +703,14 @@ subsetData <- subset(subsetData, Label != "PHI-398_V2" & Label != "PHI-021_V1" &
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose"))
 prePostTime(data = subsetData, xData = "timeCategory", yData="CD19_.CD21lo_FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
             title = "CD21lo B cells", xLabel = " ", yLabel = "CD21lo (% CD19)", repMeasures=F, newform = T) + 
-  scale_y_continuous(breaks = seq(0,20,1))#ggrepel::geom_text_repel(aes(label = Alias))
+  scale_y_continuous(breaks = seq(0,20,1)) 
 # ggsave(filename = "./Images/CD21lo_bothCohorts_overTime.pdf")
 
 bartlett.test(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 kruskal_test(formula = CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) 
 dunn_test(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd(aov(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) ) 
+dunn_test(CD19_.CD21lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "CD19_.CD21lo_FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs3H.csv")
@@ -724,13 +723,13 @@ subsetData <- subset(mergedData,  timeCategory != "two Weeks" & timeCategory != 
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose"))
 subsetData <- subsetData[which(subsetData$Tube == "HEP"),]
 prePostTime(data = subsetData, xData = "timeCategory", yData="CD19_.IgD..CD71._FreqParent", fillParam = "Prior.COVID.infection.", groupby="Record.ID", 
-            title = "CD71+ B cells", xLabel = "", yLabel = "IgD-CD71+ (% CD19+)", repMeasures=F, newform = T) #ggrepel::geom_text_repel(aes(label = Alias))
+            title = "CD71+ B cells", xLabel = "", yLabel = "IgD-CD71+ (% CD19+)", repMeasures=F, newform = T) 
 # ggsave(filename = "./Images/CD71hi_Bcells_bothCohorts_overTime.pdf")
 bartlett.test(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 kruskal_test(formula = CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) 
 dunn_test(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd(aov(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) ) 
+dunn_test(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "CD19_.IgD..CD71._FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs3J.csv")
@@ -741,7 +740,7 @@ tukey_hsd(aov(CD19_.IgD..CD71._FreqParent ~ timeCategory, data=subset(subsetData
 #'
 subsetData <- subset(mergedData, !is.na(mergedData$CXCL13))
 subsetData %>% group_by( timeCategory) %>% get_summary_stats(CXCL13, type = "common") %>% print(n=500)
-linePlot(data = mergedData, xData = 'timeCategory', yData = 'CXCL13', groupby = 'Alias', xLabel = ' ', yLabel = "CXCL13 (pg/mL)", 
+linePlot(data = mergedData, xData = 'timeCategory', yData = 'CXCL13', groupby = 'Record.ID', xLabel = ' ', yLabel = "CXCL13 (pg/mL)", 
          title = "Plasma CXCL13", colorby = "Prior.COVID.infection.") + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + 
   scale_y_continuous(limits = c(0,140),breaks=seq(0,140,10))
@@ -884,7 +883,7 @@ grid.arrange(a.1,a.2,a.3, nrow=1)
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_S1) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S1", fillParam = "Prior.COVID.infection.", 
-            groupby = "Alias", title = "S1", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "S1", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
 # ggsave(filename = "./Images/Elispots_IgG_S1_prepostTime.pdf")
 
@@ -894,7 +893,7 @@ prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S1",
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_S2) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S2", fillParam = "Prior.COVID.infection.", 
-            groupby = "Alias", title = "S2", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "S2", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 # ggsave(filename =  "./Images/Elispots_IgG_S2_prepostTime.pdf")
 
@@ -904,7 +903,7 @@ prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S2",
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_RBD) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_RBD", fillParam = "Prior.COVID.infection.", 
-            groupby = "Alias", title = "RBD", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "RBD", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 # ggsave(filename = "./Images/Elispots_IgG_RBD_prepostTime.pdf")
 
@@ -1070,7 +1069,7 @@ dunn_test(Btet_RBD_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVI
 
 
 subsetData <- subset(mergedData, timeCategory == "Baseline" | timeCategory == "Post 2nd dose")
-FC_response2 <- dcast( subsetData, `Record.ID`+`Alias` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("Btet_RBD_FreqParent")) 
+FC_response2 <- dcast( subsetData, `Record.ID` + `Prior.COVID.infection.` ~`timeCategory`, value.var = c("Btet_RBD_FreqParent")) 
 FC_response2$FoldChange <- FC_response2$`Post 2nd dose`/FC_response2$`Baseline`; FC_response2$Cohort <- NULL
 FC_response2 <- FC_response2[!is.infinite(FC_response2$FoldChange), ]
 FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "common") 
@@ -1092,9 +1091,8 @@ bartlett.test(Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior
 kruskal_test(formula = Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) 
 dunn_test(Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(Btet_RBDhiIgDloIgGhi ~ timeCategory, data = subset(subsetData, Prior.COVID.infection. == 'Yes')))
-# kruskal_test(formula = Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) 
-# dunn_test(Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
+kruskal_test(formula = Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
+dunn_test(Btet_RBDhiIgDloIgGhi ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "Btet_RBDhiIgDloIgGhi")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig5D.csv")
@@ -1158,7 +1156,7 @@ bartlett.test(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData,
 kruskal_test(formula = Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) 
 dunn_test(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
-tukey_hsd( aov(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes')) )
+dunn_test(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "Btet_RBD_CD24lo_FreqParent")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs5F.csv")
@@ -1168,7 +1166,7 @@ tukey_hsd( aov(Btet_RBD_CD24lo_FreqParent ~ timeCategory, data=subset(subsetData
 #' ------------------ Antibody analyses --------------------------
 #'
 
-linePlot(data = mergedData, xData = 'DPV', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = 'Days relative to first dose', yLabel = "anti-S1 IgG titer", 
+linePlot(data = mergedData, xData = 'DPV', yData = 'binding_IgG_S1', groupby = 'Record.ID', xLabel = 'Days relative to first dose', yLabel = "anti-S1 IgG titer", 
          title = "anti-S1 IgG titer", colorby = "Prior.COVID.infection.") + 
   # scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e7), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
@@ -1178,7 +1176,7 @@ linePlot(data = mergedData, xData = 'DPV', yData = 'binding_IgG_S1', groupby = '
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; subsetData <- subsetData[-which(subsetData$timeCategory == "2 wks post 2nd dose"),]
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose",
                                                                       "Four months post\n2nd dose"))
-a <- linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
+a <- linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Record.ID', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
               title = "anti-S1 IgG titer", colorby = "Prior.COVID.infection.") + 
   geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e8), breaks=c(10^(0:8)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)); a
@@ -1196,7 +1194,7 @@ dunn_test(binding_IgG_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.inf
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig6A.csv")
 
 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_S1', groupby = 'Record.ID', xLabel = ' ', yLabel = "anti-S1 IgG titer", 
          title = "anti-S1 IgG titer", colorby = "Prior.COVID.infection.", recentCOVID = T) + 
   geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e7), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
@@ -1221,10 +1219,10 @@ twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "bindi
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs6B-2.csv")
 
 subsetData <- subset(mergedData, timeCategory %in% c("Post 2nd dose","One month post\n2nd dose") )
-subsetData <- subsetData[, c(1:3, 12,28)]
+subsetData <- subsetData[, c(1:2, 11,27)]
 temp <- subsetData %>% group_by(Prior.COVID.infection., timeCategory) %>% get_summary_stats(type = "common")
 ggplot(temp, aes(x = timeCategory, y=mean, group = Prior.COVID.infection., color=Prior.COVID.infection.)) + geom_point(size=5) + geom_line(size=1, alpha=0.5) + 
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=0.1 ) + theme_bw() + 
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=0.2, size=0.5) + theme_bw() + 
   scale_color_manual(name="Prior COVID?", values = c("#FFC26A","#B5B2F1")) + 
   ggtitle("anti-S1 IgG") + xlab("") + ylab("anti-S1 IgG titer") + 
   theme(axis.text = element_text(color="black",size=16), axis.title = element_text(size=20), axis.text.x = element_text(angle=45, hjust=1,vjust=1),
@@ -1240,10 +1238,9 @@ t.test(data = experienced, binding_IgG_S1 ~ timeCategory, paired=T)
 
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] 
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose", "One month post\n2nd dose")) 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgA_S1', groupby = 'Alias', xLabel = ' ', yLabel = "anti-S1 IgA titer", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgA_S1', groupby = 'Record.ID', xLabel = ' ', yLabel = "anti-S1 IgA titer", 
          title = "anti-S1 IgA titer", colorby = "Prior.COVID.infection.") + 
   geom_hline(yintercept = 25, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
-  # scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e6), breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) #+ 
 # ggsave(filename = "./Images/BindingAb_S1_IgA_linePlot.pdf")
 
@@ -1261,7 +1258,7 @@ dunn_test(binding_IgA_S1 ~ timeCategory, data=subset(subsetData, Prior.COVID.inf
 
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; 
 # subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose"))
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'IC50_neutAb_log10', groupby = 'Alias', xLabel = ' ', yLabel = "log10 IC50", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'IC50_neutAb_log10', groupby = 'Record.ID', xLabel = ' ', yLabel = "log10 IC50", 
          title = "Neutralizing antibodies", colorby = "Prior.COVID.infection.") + 
   geom_hline(yintercept = 10, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,3e5), breaks=c(10^(0:6)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
@@ -1278,7 +1275,7 @@ dunn_test(IC50_neutAb_log10 ~ timeCategory, data=subset(subsetData, Prior.COVID.
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig6D.csv")
 
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'IC50_neutAb_log10', groupby = 'Alias', xLabel = ' ', yLabel = "log10 IC50", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'IC50_neutAb_log10', groupby = 'Record.ID', xLabel = ' ', yLabel = "log10 IC50", 
          title = "Neutralizing antibodies", colorby = "Prior.COVID.infection.", recentCOVID = T) + 
   geom_hline(yintercept = 10, linetype = "dashed",alpha=0.3) + annotate("text", x=5,y=15,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e5), breaks=c(10^(0:6)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
@@ -1309,7 +1306,7 @@ twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "IC50_
 
 ##' N antibodies
 subsetData <- mergedData[-which(mergedData$timeCategory == "two Weeks"),] ; 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_N', groupby = 'Alias', xLabel = ' ', yLabel = "anti-N IgG titer", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_N', groupby = 'Record.ID', xLabel = ' ', yLabel = "anti-N IgG titer", 
          title = "anti-N IgG titer", colorby = "Prior.COVID.infection.") +  
   geom_hline(yintercept = 50, linetype = "dashed",alpha=0.3) + annotate("text", x=4.1,y=25,label = "LOD", color="black", alpha=0.2)+
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e5), breaks=c(10^(0:6)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
@@ -1406,7 +1403,7 @@ subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(FC_Elispot
 #'
 subsetData <- subset(mergedData,  timeCategory != "two Weeks" & timeCategory != "2 wks post 2nd dose");   
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose","One month post\n2nd dose"))
-a<- linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Alias', xLabel = " ", yLabel = "IgG avidity (%)", 
+a<- linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = " ", yLabel = "IgG avidity (%)", 
              title = "anti-S1 Avidity", colorby = "Prior.COVID.infection.") + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + scale_y_continuous(limits = c(0,110),breaks=seq(0,140,10)) #+ 
 a
@@ -1414,8 +1411,8 @@ a
 # plotly::ggplotly(a)
 
 bartlett.test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
-tukey_hsd( aov(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) )
-# dunn_test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
+# tukey_hsd( aov(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No')) )
+dunn_test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'No'))
 bartlett.test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 dunn_test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection. == 'Yes'))
 
@@ -1424,7 +1421,7 @@ dunn_test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection.
 
 
 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Alias', xLabel = ' ', yLabel = "IgG avidity (%)", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = ' ', yLabel = "IgG avidity (%)", 
          title = "anti-S1 Avidity", colorby = "Prior.COVID.infection.", recentCOVID = T) + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("grey60","grey60")) + scale_y_continuous(limits = c(0,110),breaks=seq(0,140,10)) 
 # ggsave(filename = "./Images/avidity_lineplot_recentCOVID.pdf")
