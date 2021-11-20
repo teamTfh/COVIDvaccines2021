@@ -4,3 +4,4 @@ Since early 2020, COVID-19 vaccines have been eagerly anticipated worldwide as a
  The scripts in this archive comprise the analyses that we performed in our studies. The preprint with the full text and analysis can be found at https://www.medrxiv.org/content/10.1101/2021.02.07.21251311v3
  
  
+[![DOI](https://zenodo.org/badge/339619003.svg)](https://zenodo.org/badge/latestdoi/339619003)
