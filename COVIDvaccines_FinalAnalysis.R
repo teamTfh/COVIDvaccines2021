@@ -20,7 +20,7 @@ knitr::opts_chunk$set(fig.width=12, fig.height=8)
 
 mergedData <- readRDS(file = "mergedData.Rds")
 demog.melt <- readRDS(file = "demog.melt.Rds")
-# colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFDFB1 (orange)
+# colors:   COVID-exp B5B2F1 (purple)             COVID-naive FFC26A (orange)
 
 
 #' ------------------ First x subjects and no longitudinal --------------------------
@@ -219,14 +219,14 @@ grid.arrange(a,b, nrow=1, widths = c(1,1.1))
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "FCActivCD4_Vax1", yData = "FCActivCD8_Vax1", fillParam = "Prior.COVID.infection.", title = "Post 1st dose", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T, statsOff = T) + 
   scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 # ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax1.pdf", width=8)
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "FCActivCD4_Vax2", yData = "FCActivCD8_Vax2", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose", 
-           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T) + 
+           xLabel = "Fold-change CD4+Ki67+CD38+", yLabel = "Fold-change CD8+Ki67+CD38+", nonparam = T, statsOff = T) + 
   scale_x_continuous(trans='pseudo_log', breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,200), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 # ggsave(filename = "./Images/FCActivCD4_correl_FCActivCD8_Vax2.pdf", width=8)
@@ -250,30 +250,30 @@ ggcorrplot::ggcorrplot(corr = cor.elispots, p.mat = cor.elispots.pmat, title = "
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 1st dose", 
-           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T) + 
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T, statsOff = T) + 
   scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
 # ggsave(filename = "./Images/ActivCD4_correl_Age_Vax1.pdf", width=8)
 
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose", 
-           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T) + 
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive",
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced",
+           xData = "Age", yData = "CD4_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose",
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD4)", nonparam = T, statsOff = T) +
   scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
 # ggsave(filename = "./Images/ActivCD4_correl_Age_Vax2.pdf", width=8)
 
 
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 1st dose", 
-           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive",
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced",
+           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 1st dose",
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T, statsOff = T) +
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,7), breaks=seq(0,10,1))
 # ggsave(filename = "./Images/ActivCD8_correl_Age_Vax1.pdf", width=8)
 
-bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
-           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
-           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose", 
-           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T) + 
-  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,5), breaks=seq(0,10,1))
+bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive",
+           data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced",
+           xData = "Age", yData = "CD8_.CD38.Ki67._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose",
+           xLabel = "Age", yLabel = "Ki67+CD38+ (% CD8)", nonparam = T, statsOff = T) +
+  scale_x_continuous(limits = c(20,70), breaks=seq(0,100,10)) + scale_y_continuous(limits = c(0,7), breaks=seq(0,10,1))
 # ggsave(filename = "./Images/ActivCD8_correl_Age_Vax2.pdf", width=8)
 
 
@@ -531,23 +531,27 @@ FC_response2 %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(type = "
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "Age", yData = "CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 1st dose", 
-           xLabel = "Age", yLabel = "ICOS+CD38+ (% cTfh)", nonparam = T) +   scale_y_continuous(breaks=seq(0,27,3), limits = c(0,25) )+ scale_x_continuous(limits = c(20,70))
+           xLabel = "Age", yLabel = "ICOS+CD38+ (% cTfh)", nonparam = T, statsOff = T) +   
+  scale_y_continuous(breaks=seq(0,27,3), limits = c(0,27) )+ scale_x_continuous(limits = c(20,70))
 # ggsave(filename = "./Images/Age_correl_HiHiTfh_Vax1.pdf", width=8)
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "Age", yData = "CD4_.Nonnaive.cTfh.ICOS..CD38.._FreqParent", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose", 
-           xLabel = "Age", yLabel = "ICOS+CD38+ (% cTfh)", nonparam = T) +   scale_y_continuous(breaks=seq(0,27,3), limits = c(0,25) ) + scale_x_continuous(limits = c(20,70))
+           xLabel = "Age", yLabel = "ICOS+CD38+ (% cTfh)", nonparam = T, statsOff = T) +   
+  scale_y_continuous(breaks=seq(0,27,3), limits = c(0,27) ) + scale_x_continuous(limits = c(20,70))
 # ggsave(filename = "./Images/Age_correl_HiHiTfh_Vax2.pdf", width=8)
 
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 1st dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 1st dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "Age", yData = "FCtfh_Vax1", fillParam = "Prior.COVID.infection.", title = "Post 1st dose", 
-           xLabel = "Age", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) +scale_y_continuous(breaks=seq(0,30,1), limits = c(0,6) )+ scale_x_continuous(limits = c(20,70))
+           xLabel = "Age", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T, statsOff = T) +
+  scale_y_continuous(breaks=seq(0,30,1), limits = c(0,6) )+ scale_x_continuous(limits = c(20,70))
 # ggsave(filename = "./Images/Age_correl_FCtfh_Vax1.pdf", width=8)
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name1 = "Naive", 
            data2 = subset(mergedData, Prior.COVID.infection. == 'Yes' & timeCategory == "Post 2nd dose" & Tube == "HEP"), name2 = "Experienced", 
            xData = "Age", yData = "FCtfh_Vax2", fillParam = "Prior.COVID.infection.", title = "Post 2nd dose", 
-           xLabel = "Age", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T) +   scale_y_continuous(breaks=seq(0,30,1), limits = c(0,6) ) + scale_x_continuous(limits = c(20,70))
+           xLabel = "Age", yLabel = "Fold-change ICOS+CD38+ cTfh", nonparam = T, statsOff = T) +   
+  scale_y_continuous(breaks=seq(0,30,1), limits = c(0,6) ) + scale_x_continuous(limits = c(20,70))
 # ggsave(filename = "./Images/Age_correl_FCtfh_Vax2.pdf", width=8)
 
 
@@ -761,13 +765,13 @@ ggplot(data = subset(acuteCOVID, DPO<30), aes(x = dummy , y = CXCL13..pg.mL.)) +
 #'
 subsetData <- subset(mergedData, timeCategory == 'Post 1st dose')
 a.1 <- twoSampleBar(data = subsetData, xData = 'Prior.COVID.infection.',yData='Elispot_IgG_S1', fillParam = 'Prior.COVID.infection.',title = "S1", 
-                    yLabel = "ASC per 1e6 PBMC", nonparam=T) + 
+                    yLabel = "ASC per 1e6 PBMC", nonparam=T, position = "none") + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 a.2 <- twoSampleBar(data = subsetData, xData = 'Prior.COVID.infection.',yData='Elispot_IgG_S2', fillParam = 'Prior.COVID.infection.',title = "S2", 
                     yLabel = " ", nonparam=T)+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 a.3 <- twoSampleBar(data = subsetData, xData = 'Prior.COVID.infection.',yData='Elispot_IgG_RBD', fillParam = 'Prior.COVID.infection.',title = "RBD", 
-                    yLabel = " ", nonparam=T)+ 
+                    yLabel = " ", nonparam=T, position = "none")+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 grid.arrange(a.1,a.2,a.3, nrow=1)
 # ggpubr::ggexport(plotlist = list(a.1, a.2, a.3), filename = "./Images/Elispots_IgG_post1stDose_gridarrange.pdf", nrow = 1, width = 12)
@@ -782,7 +786,7 @@ grid.arrange(a.1,a.2,a.3, nrow=1)
 
 
 a.1 <- twoSampleBar(data = subsetData, xData = 'Prior.COVID.infection.',yData='Elispot_IgA_S1', fillParam = 'Prior.COVID.infection.',title = "S1", 
-                    yLabel = "ASC per 1e6 PBMC", nonparam=T) + 
+                    yLabel = "ASC per 1e6 PBMC", nonparam=T, position = "none") + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 a.2 <- twoSampleBar(data = subsetData, xData = 'Prior.COVID.infection.',yData='Elispot_IgA_S2', fillParam = 'Prior.COVID.infection.',title = "S2", 
                     yLabel = " ", nonparam=T)+ 
@@ -882,9 +886,10 @@ grid.arrange(a.1,a.2,a.3, nrow=1)
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_S1) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S1", fillParam = "Prior.COVID.infection.", 
-            groupby = "Record.ID", title = "S1", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "S1", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T, position = "none") +  
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
-# ggsave(filename = "./Images/Elispots_IgG_S1_prepostTime.pdf")
+
+# manual save as pdf, 7x7 plot, filename = "./Images/Elispots_IgG_S1_prepostTime.pdf"
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "Elispot_IgG_S1")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig4G.csv")
@@ -892,9 +897,9 @@ prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S1",
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_S2) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S2", fillParam = "Prior.COVID.infection.", 
-            groupby = "Record.ID", title = "S2", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "S2", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T, position="none")+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename =  "./Images/Elispots_IgG_S2_prepostTime.pdf")
+# manual save as pdf, 7x7 plot, filename =  "./Images/Elispots_IgG_S2_prepostTime.pdf"
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "Elispot_IgG_S2")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig4H.csv")
@@ -902,9 +907,9 @@ prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_S2",
 
 subsetData <- subset(mergedData, !is.na(Elispot_IgG_RBD) & timeCategory != "Pre 2nd dose" )
 prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_RBD", fillParam = "Prior.COVID.infection.", 
-            groupby = "Record.ID", title = "RBD", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T)+ 
+            groupby = "Record.ID", title = "RBD", xLabel = " ", yLabel = "IgG ASC per 1e6 PBMC", exponential=T, position="none")+ 
   scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-# ggsave(filename = "./Images/Elispots_IgG_RBD_prepostTime.pdf")
+#manual save as pdf, 7x7 plot, filename = "./Images/Elispots_IgG_RBD_prepostTime.pdf"
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "Elispot_IgG_RBD")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/fig4I.csv")
@@ -913,7 +918,7 @@ prePostTime(data = subsetData, xData = "timeCategory", yData = "Elispot_IgG_RBD"
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose"), 
            data2 = subset(mergedData, Prior.COVID.infection. == "Yes" & timeCategory == "Post 2nd dose"),
            name1 = "Naive", name2 = "Experienced", xData = "Elispot_IgG_RBD", yData = 'Elispot_IgG_S1', fillParam = 'Prior.COVID.infection.',
-           title = "IgG ELISpots post 2nd dose", xLabel = "RBD ASC per 10^6 PBMC", yLabel = "S1 ASC per 10^6 PBMC", statsOff = F) + 
+           title = "IgG ELISpots post 2nd dose", xLabel = "RBD ASC per 10^6 PBMC", yLabel = "S1 ASC per 10^6 PBMC", statsOff = T, nonparam = T) + 
   scale_y_continuous(trans='pseudo_log', limits = c(0,3e4), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
   scale_x_continuous(trans='pseudo_log', limits = c(0,1e4), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
 # ggsave(filename = "./Images/Elispots_IgG_S1-vs-RBD_correl_biv.pdf", width=8)
@@ -921,7 +926,7 @@ bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCateg
 bivScatter(data1 = subset(mergedData, Prior.COVID.infection. == 'No' & timeCategory == "Post 2nd dose"), 
            data2 = subset(mergedData, Prior.COVID.infection. == "Yes" & timeCategory == "Post 2nd dose"),
            name1 = "Naive", name2 = "Experienced", xData = "Elispot_IgG_RBD", yData = 'Elispot_IgG_S2', fillParam = 'Prior.COVID.infection.',
-           title = "IgG ELISpots post 2nd dose", xLabel = "RBD ASC per 10^6 PBMC", yLabel = "S2 ASC per 10^6 PBMC", statsOff = F) +
+           title = "IgG ELISpots post 2nd dose", xLabel = "RBD ASC per 10^6 PBMC", yLabel = "S2 ASC per 10^6 PBMC", statsOff = T, nonparam = T) +
   scale_y_continuous(trans='pseudo_log', limits = c(0,1e3), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) + 
   scale_x_continuous(trans='pseudo_log', limits = c(0,1e3), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
 # ggsave(filename = "./Images/Elispots_IgG_S2-vs-RBD_correl_biv.pdf", width = 8 )
@@ -1227,7 +1232,7 @@ twoSampleBar(data = subsetData , xData = "Prior.COVID.infection.", yData = "bind
 
 subsetData <- subset(mergedData, timeCategory == "One month post\n2nd dose")
 twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "binding_IgG_S1", fillParam = "Prior.COVID.infection.", 
-             title = "One month post", yLabel = "anti-S1 IgG titer", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e7),) + 
+             title = "One month post", yLabel = "anti-S1 IgG titer", nonparam = T, position = "none") +   coord_cartesian(ylim=c(0e1,1e7),) + 
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
 # ggsave(filename = "./Images/BindingAb_S1_IgG_oneMonth.pdf", width=5)
 
@@ -1312,7 +1317,7 @@ twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "IC50_
 ##' One month post 2nd dose
 subsetData <- subset(mergedData, timeCategory == "One month post\n2nd dose")
 twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "IC50_neutAb_log10", fillParam = "Prior.COVID.infection.", 
-             title = "One month post", yLabel = "Neutralizing antibodies", nonparam = T) +   coord_cartesian(ylim=c(0e1,1e5),) + 
+             title = "One month post", yLabel = "Neutralizing antibodies", nonparam = T, position="none") +   coord_cartesian(ylim=c(0e1,1e5),) + 
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) 
 # ggsave(filename = "./Images/neutAb_oneMonthpost2ndDose.pdf", width=5)
 
@@ -1335,14 +1340,13 @@ linePlot(data = subsetData, xData = 'timeCategory', yData = 'binding_IgG_N', gro
 ##' Baseline N antibodies
 subsetData <- subset(mergedData, timeCategory == "Baseline")
 twoSampleBar(data = subsetData, xData = "Prior.COVID.infection.", yData = "binding_IgG_N", fillParam = "Prior.COVID.infection.", 
-             title = "Baseline", yLabel = "Anti-N IgG titer", nonparam = T) + coord_cartesian(ylim=c(0e1,1e5),) + 
+             title = "Baseline", yLabel = "Anti-N IgG titer", nonparam = T, position="none") + coord_cartesian(ylim=c(0e1,1e5)) + 
   scale_y_continuous(trans='pseudo_log', breaks=c(10^(0:7)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10)) +
   annotate("text", x=2.5,y=50,label = "LOD", color="black", alpha=0.2) +  geom_hline(yintercept = 50, linetype = "dashed",alpha=0.3)
 # ggsave(filename = "./Images/bindingAb_N_IgG_baseline.pdf", width=5)
 
 # out <- subsetData[,c("Record.ID", "Prior.COVID.infection.","timeCategory", "binding_IgG_N")]
 # write.csv(x = dcast(data = out, formula = Record.ID + Prior.COVID.infection. ~ timeCategory), file = "plottedData/figs6C.csv")
-
 
 subsetData <- subset(mergedData, Prior.COVID.infection. == "Yes" & timeCategory == "Baseline")
 univScatter(data = subsetData, xData = "binding_IgG_S1", yData = 'FC_IgG_S1_postVax1', 
@@ -1419,8 +1423,8 @@ subsetData %>% group_by(Prior.COVID.infection.) %>% get_summary_stats(FC_Elispot
 #'
 subsetData <- subset(mergedData,  timeCategory != "two Weeks" & timeCategory != "2 wks post 2nd dose");   
 subsetData$timeCategory <- factor(subsetData$timeCategory, levels = c("Baseline", "Post 1st dose", "Pre 2nd dose", "Post 2nd dose","One month post\n2nd dose"))
-a<- linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = " ", yLabel = "IgG avidity (%)", 
-             title = "anti-S1 Avidity", colorby = "Prior.COVID.infection.") + theme(axis.title.x = element_blank()) + 
+a<- linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = " ", yLabel = "Avidity index", 
+             title = "anti-S1 IgG Avidity", colorby = "Prior.COVID.infection.") + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("#FFC26A","#B5B2F1")) + scale_y_continuous(limits = c(0,110),breaks=seq(0,140,10)) #+ 
 a
 # ggsave(filename = "./Images/avidity_lineplot.pdf", width=8)
@@ -1437,7 +1441,7 @@ dunn_test(Avidity ~ timeCategory, data=subset(subsetData, Prior.COVID.infection.
 
 
 
-linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = ' ', yLabel = "IgG avidity (%)", 
+linePlot(data = subsetData, xData = 'timeCategory', yData = 'Avidity', groupby = 'Record.ID', xLabel = ' ', yLabel = "Avidity index", 
          title = "anti-S1 Avidity", colorby = "Prior.COVID.infection.", recentCOVID = T) + theme(axis.title.x = element_blank()) + 
   scale_color_manual(name="Prior COVID?",values = c("grey60","grey60")) + scale_y_continuous(limits = c(0,110),breaks=seq(0,140,10)) 
 # ggsave(filename = "./Images/avidity_lineplot_recentCOVID.pdf")

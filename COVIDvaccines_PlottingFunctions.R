@@ -204,8 +204,8 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
         geom_point(data = data2, aes_string(x=xData, y=yData, fill=fillParam), size=8, color="black", pch=21) + theme_bw() + 
         geom_smooth(data = data1, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
         geom_smooth(data = data2, aes_string(x=xData, y=yData, color=fillParam, fill=NA), method='lm', fullrange=T) +
-        scale_color_manual(values=c("#B5B2F1", "#FFC26A")) + 
-        scale_fill_manual(values=c("#B5B2F1", "#FFC26A")) + 
+        scale_color_manual(values=c("#FFC26A", "#B5B2F1")) + 
+        scale_fill_manual(values=c("#FFC26A", "#B5B2F1")) +
         ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
         theme(axis.text = element_text(size=28,hjust = 0.5,color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=32,hjust = 0.5)) + 
         #annotation_custom(my_grob1) + annotation_custom(my_grob2) + 
@@ -213,7 +213,8 @@ bivScatter <- function(data1, data2, name1, name2, xData, yData, fillParam, titl
   }
 }
 
-prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform = F, pathOff = F, recentCOVID = F)
+prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, yLabel, repMeasures=T, exponential=F, newform=F, pathOff=F, 
+                        recentCOVID=F, position="left")
 {
   data[,fillParam] <- factor(data[,fillParam])
   # print(levels(data[,fillParam]))
@@ -396,6 +397,7 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
   ##  ----------------------------------------------------------------------------------------------------------------
   if(repMeasures==T & length(levels(data[,fillParam]))==2 && exponential==T)           #  repeated measures, two cohorts, exponential scale
   {
+    print("repeated measures, two cohorts, exponential scale")
     targets <- which(table(data$Record.ID) > 1)         # show only the repeated measures values
     subsetData <- data[ which( data$Record.ID %in% names(targets)   ), ]; subsetData[,xData] <- factor(subsetData[,xData])
     justforttest <- subsetData[, c(xData,yData,fillParam)]
@@ -411,32 +413,65 @@ prePostTime <- function(data, xData, yData, fillParam, groupby, title, xLabel, y
     pValue <- fit$p[1]
     annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
     my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
-    a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
-      geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
-      geom_point(size = 8, color="black", shape=21, alpha=0.5)  +  
-      scale_color_manual(values=c("#FFC26A")) + 
-      scale_fill_manual(values=c("#FFC26A")) + 
-      ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
-      theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
-            axis.text.x = element_text(angle=45,hjust=1,vjust=1),
-            legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob) + 
-      scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-    
-    data.2 <-subsetData[which(subsetData[,fillParam] == levels(temp)[2]),]
-    pValue <- fit$p[2]
-    annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
-    my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
-    a.2 <- ggplot(data=data.2, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
-      geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
-      geom_point(size = 8, color="black", shape=21, alpha=0.5)  +   
-      scale_color_manual(values=c("#B5B2F1")) + 
-      scale_fill_manual(values=c("#B5B2F1")) + 
-      ggtitle(title) +  xlab(xLabel)  + # ylab(yLabel) +
-      theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
-            axis.text.x = element_text(angle=45,hjust=1,vjust=1), axis.title.y = element_blank(), 
-            legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob) + 
-      scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
-    return(grid.arrange(a.1,a.2, nrow=1))
+    if(position == "left")
+      {
+      a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.5)  +  
+        scale_color_manual(values=c("#FFC26A")) + 
+        scale_fill_manual(values=c("#FFC26A")) + 
+        ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
+        theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
+              axis.text.x = element_text(angle=45,hjust=1,vjust=1),
+              legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob) + 
+        scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+      
+      data.2 <-subsetData[which(subsetData[,fillParam] == levels(temp)[2]),]
+      pValue <- fit$p[2]
+      annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
+      my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
+      a.2 <- ggplot(data=data.2, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.5)  +   
+        scale_color_manual(values=c("#B5B2F1")) + 
+        scale_fill_manual(values=c("#B5B2F1")) + 
+        ggtitle(title) +  xlab(xLabel)  + # ylab(yLabel) +
+        theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
+              axis.text.x = element_text(angle=45,hjust=1,vjust=1), axis.title.y = element_blank(), 
+              legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + annotation_custom(my_grob) + 
+        scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+      return(grid.arrange(a.1,a.2, nrow=1, widths=c(2.3,2)))
+    }
+    if(position == "none")
+    {
+      print("no stats")
+      a.1 <- ggplot(data=data.1, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.5)  +  
+        scale_color_manual(values=c("#FFC26A")) + 
+        scale_fill_manual(values=c("#FFC26A")) + 
+        ggtitle(title) + ylab(yLabel) + xlab(xLabel)  +
+        theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
+              axis.text.x = element_text(angle=45,hjust=1,vjust=1),
+              legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + # annotation_custom(my_grob) + 
+        scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+      
+      data.2 <-subsetData[which(subsetData[,fillParam] == levels(temp)[2]),]
+      pValue <- fit$p[2]
+      annotationInfo <- paste0("P = ", formatC(pValue, format="e",digits=1))     
+      my_grob = grobTree(textGrob(annotationInfo, x=0.03,  y=0.93, hjust=0, gp=gpar(col="black", fontsize=24))) 
+      a.2 <- ggplot(data=data.2, aes_string(x=xData, y=yData,fill=fillParam) ) + theme_bw() + 
+        geom_path(aes_string(group=groupby), color="grey70", alpha=0.5) + 
+        geom_point(size = 8, color="black", shape=21, alpha=0.5)  +   
+        scale_color_manual(values=c("#B5B2F1")) + 
+        scale_fill_manual(values=c("#B5B2F1")) + 
+        ggtitle(title) +  xlab(xLabel)  + # ylab(yLabel) +
+        theme(axis.text = element_text(size=20,hjust = 0.5, color="black"), axis.title = element_text(size=28,hjust = 0.5), plot.title = element_text(size=28,hjust = 0.5), 
+              axis.text.x = element_text(angle=45,hjust=1,vjust=1), axis.title.y = element_blank(), 
+              legend.position = "none", strip.text = element_text(size = 24, color="black"), strip.background = element_rect(fill="white")) + # annotation_custom(my_grob) + 
+        scale_y_continuous(trans='pseudo_log', limits = c(0,10000), breaks=c(10^(0:4)), labels=trans_format('log10',math_format(10^.x)), minor_breaks =5*10^(0:10))
+      return(grid.arrange(a.1,a.2, nrow=1, widths=c(2.3,2)))
+    }
   }
   
   if(repMeasures==T & length(levels(data[,fillParam]))==2 && exponential==F)           #  repeated measures, two cohorts, normal scale
