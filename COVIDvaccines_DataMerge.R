@@ -39,7 +39,7 @@ names(demog)[grep("Blood.draw",names(demog),value=F)] <- paste0("V",seq(1,length
 demog$DPO.covid <- round(as.numeric(difftime(time1 = demog$Date.of.Onset.of.Symptoms, time2 = demog$Vaccine.1.date, units = 'days')), 0); demog$Date.of.Onset.of.Symptoms <- NULL
 
 demog.melt <- melt(demog, id.vars = c("Record.ID", "Alias"), measure.vars = paste0("V",1:10))
-demog.melt$Label <- paste0(demog.melt$Alias, "_", demog.melt$variable); 
+demog.melt$Label <- paste0(demog.melt$Alias, "_", demog.melt$variable); demog.melt$Label2 <- paste0(demog.melt$Record.ID, "_", demog.melt$variable); 
 demog.melt$Visit <- demog.melt$variable;  demog.melt$variable <- NULL
 names(demog.melt)[grep("value",names(demog.melt), value=F)] <- "DPV"
 
